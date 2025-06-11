@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asistentul Tău AI</title>
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Alpine.js via CDN -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <style>
+        /* Stilizare specifică pentru iframe */
+        body {
+            overflow: hidden; /* Previne scrollbar-ul pe body */
+        }
+        #chat-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh; /* Face containerul să ocupe toată înălțimea viewport-ului */
+            padding: 1rem; /* Adaugă puțin spațiu în interior */
+            box-sizing: border-box; /* Include padding-ul în înălțimea totală */
+        }
+        #messages {
+            flex-grow: 1; /* Face zona de mesaje să ocupe spațiul disponibil */
+            overflow-y: auto; /* Permite scroll pe zona de mesaje */
+            margin-bottom: 1rem; /* Spațiu între mesaje și input */
+            padding-right: 0.5rem; /* Adaugă puțin padding pentru a evita ca scrollbar-ul să acopere textul */
+        }
+        #messages div {
+            margin-bottom: 0.75rem; /* Spațiu între mesaje */
+            padding: 0.5rem; /* Spațiu în jurul textului mesajului */
+            border-radius: 0.5rem; /* Colțuri rotunjite */
+            max-width: 90%; /* Limitează lățimea mesajelor */
+        }
+        .user-message {
+            background-color: #3B82F6; /* Albastru */
+            color: white;
+            align-self: flex-end; /* Aliniază mesajele utilizatorului la dreapta */
+            margin-left: auto; /* Împinge mesajul spre dreapta */
+        }
+        .assistant-message {
+            background-color: #E5E7EB; /* Gri deschis */
+            color: #1F2937; /* Gri închis */
+            align-self: flex-start; /* Aliniază mesajele asistentului la stânga */
+            margin-right: auto; /* Împinge mesajul spre stânga */
+        }
+         /* Scrollbar personalizat (opțional, pentru Webkit - Chrome, Safari) */
+        #messages::-webkit-scrollbar {
+            width: 8px;
+        }
+        #messages::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        #messages::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+        #messages::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div id="chat-container" x-data="chatApp()" @submit.prevent="sendMessage">
+        <div id="messages" class="space-y-3">
+            <!-- Mesajele vor apărea aici -->
+            <template x-for="message in messages" :key="message.id">
+                 <div :class="{ 'user-message': message.role === 'user', 'assistant-message': message.role === 'assistant' }"
+                      class="relative"
+                 >
+                    <span x-html="message.content"></span>
+                    <!-- Indicator de încărcare (opțional) -->
+                    <template x-if="message.role === 'assistant' && message.status === 'typing'">
+                         <svg class="animate-spin h-5 w-5 text-gray-500 absolute top-1 right-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                         </svg>
+                    </template>
+                </div>
+            </template>
+            <template x-if="isLoading">
+                 <div class="assistant-message">
+                    <!-- Simple typing indicator -->
+                    <span class="animate-pulse">...</span>
+                </div>
+            </template>
+        </div>
+
+        <form class="flex gap-2">
+            <input
+                x-model="currentMessage"
+                type="text"
+                class="flex-grow p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:border-blue-300"
+                placeholder="Scrie mesajul aici..."
+                :disabled="isLoading"
+            >
+            <button
+                type="submit"
+                class="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition duration-200"
+                :disabled="isLoading || !currentMessage.trim()"
+            >
+                Trimite
+            </button>
+        </form>
+    </div>
+
+    <script>
+        function chatApp() {
+            return {
+                messages: [],
+                currentMessage: '',
+                isLoading: false,
+                threadId: null, // Vom stoca ID-ul conversației aici
+
+                async sendMessage() {
+                    if (!this.currentMessage.trim() || this.isLoading) {
+                        return;
+                    }
+
+                    const userMessageText = this.currentMessage;
+                    // Adaugă mesajul utilizatorului în listă
+                    this.messages.push({ id: Date.now() + '_user', role: 'user', content: userMessageText });
+
+                    // Curăță input-ul
+                    this.currentMessage = '';
+                    this.isLoading = true; // Activează indicatorul de încărcare
+
+                    // Scroll la ultimul mesaj (cel adăugat de utilizator)
+                    this.$nextTick(() => {
+                         const messagesDiv = document.getElementById('messages');
+                         messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                    });
+
+
+                    try {
+                        const response = await fetch('/api/chat', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                message: userMessageText,
+                                threadId: this.threadId // Trimite threadId dacă există
+                            }),
+                        });
+
+                        if (!response.ok) {
+                             const errorData = await response.json();
+                            throw new Error(`HTTP error! status: ${response.status}, message: ${errorData.error || 'Unknown error'}`);
+                        }
+
+                        const data = await response.json();
+
+                        // Stochează threadId pentru conversațiile viitoare
+                        if (data.threadId) {
+                            this.threadId = data.threadId;
+                        }
+
+                        // Adaugă răspunsul asistentului
+                         // Note: OpenAI API returns content as an array of text objects
+                        const assistantResponse = data.assistantMessage.content
+                            .filter(item => item.type === 'text') // Filter for text content
+                            .map(item => item.text.value) // Extract the text value
+                            .join('\n'); // Join multiple text blocks if any
+
+
+                        this.messages.push({ id: Date.now() + '_assistant', role: 'assistant', content: assistantResponse });
+
+                    } catch (error) {
+                        console.error('Error sending message:', error);
+                         // Adaugă un mesaj de eroare vizibil utilizatorului
+                         this.messages.push({
+                            id: Date.now() + '_error',
+                            role: 'assistant', // Tratează eroarea ca un răspuns al sistemului
+                            content: `⛔ A apărut o eroare: ${error.message}. Te rog să încerci din nou.`,
+                            isError: true // Poți folosi asta pentru stilizare specială dacă vrei
+                         });
+                    } finally {
+                        this.isLoading = false; // Dezactivează indicatorul de încărcare
+                        // Scroll la ultimul mesaj (răspunsul asistentului sau eroare)
+                        this.$nextTick(() => {
+                            const messagesDiv = document.getElementById('messages');
+                            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                        });
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+</html>
