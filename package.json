@@ -1,0 +1,12 @@
+{
+  "name": "socrate-ai-vercel",
+  "version": "1.0.0",
+  "description": "OpenAI assistant deployed on Vercel",
+  "private": true,
+  "dependencies": {
+    "openai": "^4.47.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
