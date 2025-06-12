@@ -25,6 +25,10 @@
             display: flex;
             flex-direction: column;
             position: relative;
+            /* >>> MODIFICARI AICI PENTRU SPATIEREA GENERALA PE MOBIL <<< */
+            padding-left: 1rem; /* Spațiu lateral pe stânga */
+            padding-right: 1rem; /* Spațiu lateral pe dreapta */
+            /* >>> SFARSIT MODIFICARI <<< */
         }
 
         /* Header full-width cu gradient de albastruri mai închise */
@@ -33,6 +37,11 @@
             padding: 2rem 1rem; /* Spațiu interior generos */
             color: var(--brand-white);
             text-align: center;
+            /* >>> MODIFICARI AICI PENTRU A SE ADAPTA PADDING-ULUI BODY <<< */
+            margin-left: -1rem; /* Anulează padding-ul body pe stânga */
+            margin-right: -1rem; /* Anulează padding-ul body pe dreapta */
+            width: calc(100% + 2rem); /* Întinde headerul pe toată lățimea, inclusiv padding-ul body */
+            /* >>> SFARSIT MODIFICARI <<< */
         }
 
         .main-header h1 {
@@ -60,13 +69,13 @@
         }
 
         #chat-container-wrapper {
-            /* Flexbox pentru centrare */
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             flex-grow: 1;
-            padding: 1rem; /* Spațiu uniform pe toate laturile */
+            /* Nu mai e nevoie de padding aici, îl avem pe body */
+            /* padding: 1rem; */
         }
 
         #chat-container {
@@ -81,7 +90,7 @@
 
             /* >>> MODIFICARI AICI PENTRU RESPONSIVITATE <<< */
             /* Dimensiuni de bază pentru mobil (implicit) */
-            width: 95%; /* Ocupă aproape toată lățimea pe mobil */
+            width: 100%; /* Ocupă 100% din spațiul disponibil al wrapper-ului, care acum are padding */
             max-width: 467px; /* Max width for desktop (original 2/3 ratio) */
             height: 70vh; /* Înălțime relativă la viewport, util pentru mobil */
             max-height: 700px; /* Înălțime maximă pentru desktop */
@@ -103,7 +112,7 @@
             border-radius: 0.75rem;
             max-width: 90%;
             line-height: 1.6;
-            word-wrap: break-word; /* Asigură că textul lung se înfășoară în interiorul bulei */
+            word-wrap: break-word;
         }
 
         .user-message {
@@ -158,28 +167,37 @@
         /* Stiluri responsive pentru input și buton, folosind Tailwind în line */
         /* Tailwind are deja clasele implicite, dar putem adăuga aici pentru consistență */
         @media (max-width: 640px) { /* Small screens and below */
+             body {
+                padding-left: 0.5rem; /* Reduce padding-ul pe ecrane foarte mici */
+                padding-right: 0.5rem;
+            }
+            .main-header {
+                 margin-left: -0.5rem; /* Anulează noul padding de pe body */
+                 margin-right: -0.5rem;
+                 width: calc(100% + 1rem); /* Ajustează lățimea header-ului */
+            }
              .main-header h1 {
-                font-size: 2.5rem; /* Slightly smaller title on small screens */
+                font-size: 2rem; /* Și mai mic pe mobil */
             }
             .main-header h2 {
-                font-size: 1.25rem; /* Smaller subtitle on small screens */
+                font-size: 1.1rem; /* Și mai mic pe mobil */
             }
             .main-header p {
-                font-size: 0.875rem; /* Smaller paragraph on small screens */
-                padding: 0.75rem 1rem;
+                font-size: 0.8rem; /* Și mai mic pe mobil */
+                padding: 0.5rem 0.75rem;
             }
             #chat-container {
-                padding: 1rem; /* Spațiu interior mai mic pe mobil */
+                padding: 0.75rem; /* Spațiu interior mai mic pe mobil */
             }
              #messages div {
                 padding: 0.5rem 0.75rem; /* Bule de mesaj mai mici pe mobil */
             }
             .send-button {
-                padding: 0.6rem 1rem; /* Buton de trimitere mai compact */
-                font-size: 0.875rem;
+                padding: 0.5rem 0.8rem; /* Buton de trimitere și mai compact */
+                font-size: 0.8rem;
             }
             form input {
-                padding: 0.75rem; /* Input mai compact */
+                padding: 0.6rem; /* Input și mai compact */
             }
         }
 
