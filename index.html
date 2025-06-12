@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Socrate AI</title>
-    <!-- Tailwind CSS via CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Alpine.js via CDN -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>
         /* Definirea culorilor de brand ca variabile CSS (opțional, dar util) */
@@ -25,31 +23,61 @@
             background-image: linear-gradient(to bottom, var(--brand-light-blue-gray), var(--brand-medium-blue));
             min-height: 100vh;
             display: flex;
-            flex-direction: column; /* Permite H3 să stea jos */
-            position: relative; /* Pentru poziționarea absolută a H3 */
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* Header full-width cu gradient de albastruri mai închise */
+        .main-header {
+            background-image: linear-gradient(to right, var(--brand-dark-blue), var(--brand-medium-blue));
+            padding: 2rem 1rem; /* Spațiu interior generos */
+            color: var(--brand-white);
+            text-align: center;
+        }
+
+        .main-header h1 {
+            font-size: 3.5rem; /* Mărime mai mare pentru titlu */
+            font-weight: 800; /* Extra bold */
+            color: var(--brand-white); /* Culoare albă pentru titlu */
+            text-transform: uppercase; /* Majuscule */
+            margin-bottom: 0.5rem;
+        }
+
+        .main-header h2 {
+            font-size: 1.75rem; /* Mărime pentru subtitlu */
+            color: var(--brand-white); /* Culoare albă pentru subtitlu */
+        }
+
+        .main-header p {
+            margin-top: 1.5rem;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            font-size: 1rem;
+            background-color: rgba(0,0,0,0.2);
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
         }
 
         #chat-container-wrapper {
-            /* Container pentru a centra caseta de chat și a permite spațiu pentru header/footer */
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            flex-grow: 1; /* Ocupă spațiul disponibil */
+            flex-grow: 1;
             padding: 1rem;
         }
 
         #chat-container {
             display: flex;
             flex-direction: column;
-            /* Înălțime fixă și lățime calculată conform raportului 2:3 */
             height: 700px;
             width: 467px; /* (2/3) * 700px */
             background-color: var(--brand-white);
-            border-radius: 0.75rem; /* rounded-lg */
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* shadow-lg */
-            overflow: hidden; /* Important pentru a menține colțurile rotunjite și pentru scroll */
-            padding: 1.5rem; /* Spațiu interior mai generos */
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            padding: 1.5rem;
             box-sizing: border-box;
         }
 
@@ -57,27 +85,29 @@
             flex-grow: 1;
             overflow-y: auto;
             margin-bottom: 1rem;
-            padding-right: 0.5rem; /* Spațiu pentru scrollbar */
+            padding-right: 0.5rem;
+            display: flex; /* Adăugat pentru a folosi flexbox la mesaje */
+            flex-direction: column; /* Mesajele se așează în coloană */
         }
 
-        #messages div { /* Stil general pentru bulele de mesaj */
+        #messages div {
             margin-bottom: 0.75rem;
             padding: 0.75rem 1rem;
-            border-radius: 0.75rem; /* Colțuri mai rotunjite */
+            border-radius: 0.75rem;
             max-width: 90%;
             line-height: 1.6;
         }
 
         .user-message {
-            background-color: var(--brand-medium-blue); /* #3d84c6 */
+            background-color: var(--brand-medium-blue);
             color: var(--brand-white);
             align-self: flex-end;
             margin-left: auto;
         }
 
         .assistant-message {
-            background-color: var(--brand-lightest-green-blue); /* #d9e9d3 */
-            color: var(--brand-text-dark); /* Un text mai închis pentru lizibilitate */
+            background-color: var(--brand-lightest-green-blue);
+            color: var(--brand-text-dark);
             align-self: flex-start;
             margin-right: auto;
         }
@@ -87,6 +117,14 @@
         #messages::-webkit-scrollbar-track { background: transparent; border-radius: 4px; }
         #messages::-webkit-scrollbar-thumb { background: var(--brand-light-blue); border-radius: 4px; }
         #messages::-webkit-scrollbar-thumb:hover { background: var(--brand-medium-blue); }
+
+        .typing-indicator {
+            align-self: flex-start; /* Asigură că indicatorul de tastare este aliniat la stânga */
+            padding: 0.75rem 1rem;
+            border-radius: 0.75rem;
+            background-color: var(--brand-lightest-green-blue);
+            color: var(--brand-text-dark);
+        }
 
         .typing-indicator span {
             height: 8px;
@@ -104,37 +142,35 @@
             40% { transform: scale(1.0); }
         }
 
+        /* Stil pentru butonul de trimitere */
+        .send-button {
+            border-radius: 0.75rem; /* Colțuri rotunjite pentru buton */
+        }
+
     </style>
 </head>
 <body class="font-sans text-gray-800">
 
-    <!-- Header cu titluri și imaginea lui Socrate -->
-    <header class="py-8 px-4 text-center text-white">
-        <div class="max-w-3xl mx-auto flex items-center justify-center space-x-6">
-            <img src="https://i.imgur.com/KqS0tDk.png" alt="Socrate" class="h-24 w-24 md:h-32 md:w-32 rounded-full shadow-md border-2 border-white object-cover">
-            <div>
-                <h1 class="text-4xl md:text-5xl font-bold" style="color: var(--brand-dark-blue);">Socrate AI</h1>
-                <h2 class="text-xl md:text-2xl mt-1" style="color: var(--brand-text-dark);">O experiență imersivă în maieutică</h2>
-            </div>
+    <header class="main-header">
+        <div class="max-w-4xl mx-auto">
+            <h1>SOCRATE AI</h1>
+            <h2>O experiență imersivă în maieutică</h2>
+            <p>
+                Dă-ți voie să explorezi cu Socrate AI dimensiunile profunde ale introspecției. Când consideri că ai explorat suficient solicită-i să sumarizeze dialogul parcurs.
+            </p>
+            <h3 class="mt-4 text-sm md:text-base">Creator: Dănuț Mitruț - Hello Business Ecosystem</h3>
         </div>
-        <p class="mt-6 max-w-2xl mx-auto text-sm md:text-base" style="color: var(--brand-white); background-color: rgba(0,0,0,0.1); padding: 0.5rem; border-radius: 0.5rem;">
-            Dă-ți voie să explorezi cu Socrate AI dimensiunile profunde ale introspecției. Când consideri că ai explorat suficient solicită-i să sumarizeze dialogul parcurs.
-        </p>
     </header>
 
-    <!-- Wrapper pentru caseta de chat -->
     <div id="chat-container-wrapper">
         <div id="chat-container" x-data="chatApp()" @submit.prevent="sendMessage">
             <div id="messages">
-                <!-- Mesajele vor apărea aici -->
                 <template x-for="message in messages" :key="message.id">
                     <div :class="{ 'user-message': message.role === 'user', 'assistant-message': message.role === 'assistant' }" x-html="message.content"></div>
                 </template>
                 <template x-if="isLoading">
-                    <div class="assistant-message">
-                        <div class="typing-indicator">
-                            <span></span><span></span><span></span>
-                        </div>
+                    <div class="typing-indicator">
+                        <span></span><span></span><span></span>
                     </div>
                 </template>
             </div>
@@ -149,7 +185,7 @@
                 >
                 <button
                     type="submit"
-                    class="text-white px-6 py-3 rounded-lg transition duration-200 flex items-center justify-center"
+                    class="send-button text-white px-6 py-3 transition duration-200 flex items-center justify-center"
                     :class="isLoading || !currentMessage.trim() ? 'bg-[var(--brand-light-blue)] cursor-not-allowed' : 'bg-[var(--brand-dark-blue)] hover:bg-[var(--brand-medium-blue)]'"
                     :disabled="isLoading || !currentMessage.trim()"
                 >
@@ -158,11 +194,6 @@
             </form>
         </div>
     </div>
-
-    <!-- H3 în colțul din dreapta jos -->
-    <footer class="absolute bottom-4 right-4 text-xs md:text-sm p-2 rounded" style="color: var(--brand-white); background-color: rgba(0,0,0,0.2);">
-        <h3>Creator: Dănuț Mitruț - Hello Business Ecosystem</h3>
-    </footer>
 
     <script>
         function chatApp() {
@@ -199,7 +230,7 @@
                         const assistantResponse = data.assistantMessage.content
                             .filter(item => item.type === 'text')
                             .map(item => this.escapeHtml(item.text.value))
-                            .join('<br>'); // Am adăugat <br> pentru a păstra formatarea cu noi linii
+                            .join('<br>');
 
                         this.messages.push({ id: Date.now() + '_assistant', role: 'assistant', content: assistantResponse });
 
@@ -222,13 +253,12 @@
                     });
                 },
                 escapeHtml(unsafe) {
-                    // Funcție simplă pentru a preveni XSS dacă textul conține HTML
                     return unsafe
-                         .replace(/&/g, "&")
-                         .replace(/</g, "<")
-                         .replace(/>/g, ">")
-                         .replace(/"/g, """)
-                         .replace(/'/g, "'");
+                        .replace(/&/g, "&amp;")
+                        .replace(/</g, "&lt;")
+                        .replace(/>/g, "&gt;")
+                        .replace(/"/g, "&quot;")
+                        .replace(/'/g, "&#039;");
                 }
             }
         }
