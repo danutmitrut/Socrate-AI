@@ -32,8 +32,7 @@
         /* Header full-width cu gradient și stiluri impunătoare */
         header { 
             background-image: linear-gradient(to right, var(--brand-dark-blue), var(--brand-medium-blue));
-            /* >>> MODIFICARI AICI: Reducem padding-ul vertical general al headerului la minimum <<< */
-            padding: 0.5rem 1rem; /* Redus de la 0.75rem la 0.5rem */
+            padding: 0.5rem 1rem; 
             color: var(--brand-white);
             text-align: center;
             width: 100%;
@@ -59,12 +58,11 @@
 
         /* Stiluri pentru creator, mutat acum în header, cu margini reduse la minimum */
         header h3 { 
-            /* >>> MODIFICARI AICI: Reducem margin-top și margin-bottom la minimum <<< */
-            margin-top: 0; /* Eliminăm margin-top */
+            margin-top: 0; 
             font-size: 1rem;
             opacity: 0.9;
             color: var(--brand-white);
-            margin-bottom: 0.25rem; /* Redus de la 0.5rem */
+            margin-bottom: 0.25rem; 
         }
 
         header p { /* Stiluri pentru instrucțiunile de utilizare, cu margine redusă la minimum */
@@ -85,8 +83,7 @@
             flex-direction: column;
             align-items: center; 
             flex-grow: 1; 
-            /* >>> MODIFICARI AICI: Reducem margin-top pentru a aduce chat-ul și mai sus <<< */
-            margin-top: 0.75rem; /* Redus de la 1rem */
+            margin-top: 0.75rem; 
             padding-bottom: 1rem; 
             padding-left: 1rem;
             padding-right: 1rem;
@@ -264,17 +261,15 @@
             header {
                 margin: 0; 
                 width: 100%; 
-                /* >>> MODIFICARI AICI: Reducem și mai mult padding-ul în header pe mobil <<< */
-                padding: 0.4rem 0.75rem; /* Redus de la 0.5rem */
+                padding: 0.4rem 0.75rem; 
             }
-            /* >>> MODIFICARI AICI: Font size ajustări pentru mobil și margini minime <<< */
-            header h1 { font-size: 1.3rem; margin-bottom: 0; } /* Micșorăm fontul, eliminăm margin */
-            header h2 { font-size: 0.75rem; margin-bottom: 0; } /* Micșorăm fontul, eliminăm margin */
-            header h3 { font-size: 0.6rem; margin-top: 0; margin-bottom: 0.2rem;} /* Ajustăm și mai mult creatorul, margini minime */
-            header p { font-size: 0.65rem; padding: 0.25rem 0.4rem; margin-top: 0.15rem;} /* Ajustăm explicația, padding și margin-top minime */
+            header h1 { font-size: 1.3rem; margin-bottom: 0; } 
+            header h2 { font-size: 0.75rem; margin-bottom: 0; } 
+            header h3 { font-size: 0.6rem; margin-top: 0.15rem; margin-bottom: 0.4rem;} 
+            header p { font-size: 0.65rem; padding: 0.25rem 0.4rem; margin-top: 0.15rem;} 
 
             #chat-interaction-area {
-                margin-top: 0.5rem; /* Redus de la 0.75rem */
+                margin-top: 0.5rem; 
                 padding-bottom: 0.5rem; 
                 padding-left: 0.5rem; 
                 padding-right: 0.5rem; 
@@ -378,17 +373,19 @@
                     console.log("Initializing chat...");
                     this.loadThreadFromLocalStorage(); 
 
-                    if (!this.threadId) {
+                    // >>> MODIFICARE AICI: Acum apelăm fetchAndDisplayThreadMessages dacă threadId există <<<
+                    if (this.threadId) {
+                        this.fetchAndDisplayThreadMessages(this.threadId);
+                        this.messages.push({ // Mesaj de bun venit înapoi, dar după mesajele vechi
+                            id: Date.now() + '_welcome_back',
+                            role: 'assistant',
+                            content: "Bine ai revenit! Conversația noastră continuă. Cu ce gând mergem mai departe?"
+                        });
+                    } else {
                         this.messages.push({
                             id: Date.now() + '_welcome',
                             role: 'assistant',
                             content: "Bună! Sunt Socrate AI, gata să explorăm împreună. Cu ce gând sau idee ai dori să începem astăzi călătoria noastră socratică?"
-                        });
-                    } else {
-                        this.messages.push({
-                            id: Date.now() + '_welcome_back',
-                            role: 'assistant',
-                            content: "Bine ai revenit! Conversația noastră continuă. Cu ce gând mergem mai departe?"
                         });
                     }
                     this.$nextTick(() => this.scrollToBottom());
@@ -426,6 +423,56 @@
                         content: "Salut! Am început o nouă conversație. Cu ce idee sau întrebare vrei să pornim la drum astăzi?"
                     });
                     this.$nextTick(() => this.scrollToBottom());
+                },
+
+                // Funcție NOUĂ pentru a prelua și afișa mesajele dintr-un thread existent
+                async fetchAndDisplayThreadMessages(threadId) {
+                    this.isLoading = true; // Activează indicatorul de încărcare cât timp preia mesajele
+                    this.messages = []; // Golește mesajele curente pentru a afișa istoricul
+                    
+                    try {
+                        const response = await fetch('/api/chat', { // Vom folosi același endpoint /api/chat
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ threadId: threadId, action: 'get_messages' }) // Adăugăm o acțiune pentru backend
+                        });
+
+                        if (!response.ok) {
+                            const errorData = await response.json().catch(() => ({ error: "Server error, not valid JSON" }));
+                            throw new Error(`HTTP ${response.status}: ${errorData.error || 'Unknown error'}`);
+                        }
+
+                        const data = await response.json();
+                        
+                        // Procesează mesajele primite de la backend
+                        data.messages.forEach(msg => {
+                            // Asistentul OpenAI returnează mesaje cu "content" ca array de obiecte
+                            // Trebuie să verificăm tipul de rol și să formatăm conținutul
+                            const formattedContent = msg.content
+                                .filter(item => item.type === 'text')
+                                .map(item => this.escapeHtml(item.text.value))
+                                .join('<br>');
+
+                            this.messages.push({
+                                id: msg.id, // ID-ul mesajului de la OpenAI
+                                role: msg.role, // 'user' sau 'assistant'
+                                content: formattedContent,
+                                // isError: false // Nu ar trebui să fie erori în istoricul valid
+                            });
+                        });
+                        this.scrollToBottom(); // Scrollează la final după încărcarea istoricului
+
+                    } catch (error) {
+                        console.error('Error fetching thread messages:', error);
+                        this.messages.push({
+                            id: Date.now() + '_error_history',
+                            role: 'assistant',
+                            content: `⛔ Nu am putut încărca istoricul conversației: ${this.escapeHtml(error.message)}.`,
+                            isError: true
+                        });
+                    } finally {
+                        this.isLoading = false; // Dezactivează indicatorul de încărcare
+                    }
                 },
 
                 // Trimite mesajul către backend API
