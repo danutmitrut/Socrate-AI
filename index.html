@@ -3,54 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Socrate AI - Dănuț Mitruț</title> <!-- Am adăugat numele tău în titlu -->
-    <!-- Tailwind CSS via CDN -->
+    <title>Socrate AI</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Alpine.js via CDN -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>
         /* Definirea culorilor de brand ca variabile CSS */
         :root {
             --brand-lightest-green-blue: #d9e9d3; /* Verde deschis */
-            --brand-light-blue-gray: #a2c4c9;     /* Albastru-gri deschis */
+            --brand-light-blue-gray: #a2c4c9;      /* Albastru-gri deschis */
             --brand-light-blue: #6fa8dc;        /* Albastru deschis */
-            --brand-medium-blue: #3d84c6;       /* Albastru mediu */
-            --brand-dark-blue: #0c5394;         /* Albastru închis */
+            --brand-medium-blue: #3d84c6;        /* Albastru mediu */
+            --brand-dark-blue: #0c5394;          /* Albastru închis */
             --brand-white: #FFFFFF;
-            --brand-text-dark: #1f2937;         /* Un gri închis pentru text general (Tailwind gray-800) */
-            --brand-text-light: #f9fafb;        /* Un gri foarte deschis (Tailwind gray-50) */
-            --brand-red-error: #dc2626; /* Tailwind red-600 pentru mesaje de eroare */
+            --brand-text-dark: #2d3748; /* Un gri închis pentru text general */
+            --brand-red-error: #dc2626; /* Culoare pentru mesaje de eroare */
         }
 
-        /* Gradient de albastruri pentru fundalul paginii și spațierea generală */
+        /* Gradient pentru fundalul paginii și spațierea generală */
         body {
-            background: linear-gradient(to bottom, var(--brand-dark-blue), var(--brand-medium-blue));
+            background-image: linear-gradient(to bottom, var(--brand-light-blue-gray), var(--brand-medium-blue));
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            font-family: ui-sans-serif, system-ui, sans-serif; /* Font generic sans-serif */
-            color: var(--brand-text-dark);
-            /* Spațiere generală consistentă pe toate laturile */
-            padding: 1rem;
-            box-sizing: border-box;
+            position: relative;
+            padding-left: 1rem; /* Spațiu lateral pe stânga */
+            padding-right: 1rem; /* Spațiu lateral pe dreapta */
+            box-sizing: border-box; /* Include padding-ul în lățime/înălțime */
         }
 
         /* Header full-width cu gradient și stiluri impunătoare */
-        header {
+        .main-header {
             background-image: linear-gradient(to right, var(--brand-dark-blue), var(--brand-medium-blue));
             padding: 2rem 1rem;
             color: var(--brand-white);
             text-align: center;
-            /* Anulează padding-ul body și extinde header-ul */
-            margin: -1rem; /* Anulează padding-ul de 1rem de pe body pe toate laturile */
-            width: calc(100% + 2rem); /* Compensează margin-ul */
+            margin-left: -1rem; /* Anulează padding-ul body pe stânga */
+            margin-right: -1rem; /* Anulează padding-ul body pe dreapta */
+            width: calc(100% + 2rem); /* Întinde headerul pe toată lățimea, inclusiv padding-ul body */
             flex-shrink: 0; /* Nu lasă header-ul să se micșoreze */
-            /* border-radius a fost scos, nu se vede la full width */
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-             /* Margin-bottom a fost mutat în wrapper pt chat */
         }
 
-        header h1 {
+        .main-header h1 {
             font-size: 3.5rem;
             font-weight: 800;
             color: var(--brand-white);
@@ -58,12 +51,12 @@
             margin-bottom: 0.5rem;
         }
 
-        header h2 {
+        .main-header h2 {
             font-size: 1.75rem;
             color: var(--brand-white);
         }
 
-        header p { /* Stiluri pentru instrucțiunile de utilizare */
+        .main-header p {
             margin-top: 1.5rem;
             max-width: 800px;
             margin-left: auto;
@@ -72,25 +65,23 @@
             background-color: rgba(0,0,0,0.2);
             padding: 0.75rem 1.5rem;
             border-radius: 0.75rem;
-            line-height: 1.5;
         }
-         header h3 { /* Stiluri pentru creator, mutat acum în header */
-             margin-top: 1.5rem;
-             font-size: 1rem;
-             opacity: 0.9;
-             color: var(--brand-white);
-         }
 
+        .main-header h3 { /* Stiluri pentru creator, mutat acum în header */
+            margin-top: 1.5rem;
+            font-size: 1rem;
+            opacity: 0.9;
+            color: var(--brand-white);
+        }
 
         /* Wrapper principal pentru zona de interacțiune (buton + chat) */
         #chat-interaction-area {
-             display: flex;
-             flex-direction: column;
-             align-items: center; /* Centrează conținutul (buton si chat) orizontal */
-             flex-grow: 1; /* Ocupă tot spațiul vertical rămas */
-             margin-top: 2rem; /* Spațiu între header și zona de interacțiune */
-             /* Adaugă padding la fundul wrapperului, nu pe body */
-             padding-bottom: 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* Centrează conținutul (buton si chat) orizontal */
+            flex-grow: 1; /* Ocupă tot spațiul vertical rămas */
+            margin-top: 2rem; /* Spațiu între header și zona de interacțiune */
+            padding-bottom: 1rem; /* Padding la fundul wrapperului */
         }
 
         /* Container pentru butonul "Nou Chat" */
@@ -101,22 +92,21 @@
             margin-bottom: 0.5rem; /* Spațiu între buton și caseta de chat */
         }
 
-         /* Stiluri pentru butonul "Nou Chat" */
-         #new-chat-button {
-             background-color: var(--brand-light-blue);
-             color: var(--brand-white);
-             padding: 0.4rem 0.8rem;
-             border-radius: 0.375rem; /* rounded-md */
-             font-size: 0.875rem; /* text-sm */
-             cursor: pointer;
-             border: none;
-             transition: background-color 0.2s ease-in-out;
-         }
+        /* Stiluri pentru butonul "Nou Chat" */
+        #new-chat-button {
+            background-color: var(--brand-light-blue);
+            color: var(--brand-white);
+            padding: 0.4rem 0.8rem;
+            border-radius: 0.375rem; /* rounded-md */
+            font-size: 0.875rem; /* text-sm */
+            cursor: pointer;
+            border: none;
+            transition: background-color 0.2s ease-in-out;
+        }
 
-         #new-chat-button:hover {
-             background-color: var(--brand-medium-blue);
-         }
-
+        #new-chat-button:hover {
+            background-color: var(--brand-medium-blue);
+        }
 
         /* Container principal pentru caseta de chat */
         #chat-container {
@@ -130,7 +120,7 @@
             box-sizing: border-box;
             position: relative;
 
-            /* Dimensiuni și responsivitate (preluate din codul tău) */
+            /* Dimensiuni și responsivitate */
             width: 100%;
             max-width: 467px;
             height: 70vh; /* Păstrează înălțimea relativă */
@@ -171,15 +161,14 @@
             margin-right: auto;
         }
 
-         .error-message { /* Stil pentru mesajele de eroare */
-             background-color: var(--brand-red-error);
-             color: var(--brand-white);
-             align-self: flex-start;
-             margin-right: auto;
-         }
+        .error-message { /* Stil pentru mesajele de eroare */
+            background-color: var(--brand-red-error);
+            color: var(--brand-white);
+            align-self: flex-start;
+            margin-right: auto;
+        }
 
-
-        /* Scrollbar personalizat (opțional, preluat din codul tău) */
+        /* Scrollbar personalizat (opțional) */
         #messages::-webkit-scrollbar { width: 8px; }
         #messages::-webkit-scrollbar-track { background: transparent; border-radius: 4px; }
         #messages::-webkit-scrollbar-thumb { background: var(--brand-light-blue); border-radius: 4px; }
@@ -218,7 +207,7 @@
             align-items: center;
             padding-top: 0.5rem;
             border-top: 1px solid var(--brand-light-blue-gray);
-             flex-shrink: 0; /* Previne micsorarea form-ului */
+            flex-shrink: 0; /* Previne micsorarea form-ului */
         }
 
         form input {
@@ -233,9 +222,9 @@
             border-color: var(--brand-medium-blue);
             box-shadow: 0 0 0 2px rgba(61, 132, 198, 0.5);
         }
-         form input::placeholder {
-             color: #9ca3af;
-         }
+        form input::placeholder {
+            color: #9ca3af;
+        }
 
         /* Stiluri pentru butonul Trimite */
         button[type="submit"] {
@@ -252,10 +241,10 @@
         }
 
         button[type="submit"]:enabled {
-             background-color: var(--brand-dark-blue);
+            background-color: var(--brand-dark-blue);
         }
         button[type="submit"]:enabled:hover {
-             background-color: var(--brand-medium-blue);
+            background-color: var(--brand-medium-blue);
         }
 
         button[type="submit"]:disabled {
@@ -264,42 +253,41 @@
             opacity: 0.8;
         }
 
-
-        /* Responsive adjustments (ajustate peste ale tale) */
+        /* Responsive adjustments */
         @media (max-width: 640px) {
-             body {
+            body {
                 padding: 0.5rem; /* Reduce padding-ul general */
             }
             header {
-                 margin: -0.5rem; /* Anulează padding-ul nou de pe body */
-                 width: calc(100% + 1rem); /* Compensează margin-ul */
-                 padding: 1.5rem 0.75rem; /* Reduce padding interior header */
+                margin: -0.5rem; /* Anulează padding-ul nou de pe body */
+                width: calc(100% + 1rem); /* Compensează margin-ul */
+                padding: 1.5rem 0.75rem; /* Reduce padding interior header */
             }
-             header h1 { font-size: 2rem; }
-             header h2 { font-size: 1.1rem; }
-             header h3 { font-size: 0.8rem; margin-top: 1rem;}
-              header p { font-size: 0.85rem; padding: 0.5rem 0.75rem;}
+            header h1 { font-size: 2rem; }
+            header h2 { font-size: 1.1rem; }
+            header h3 { font-size: 0.8rem; margin-top: 1rem;}
+            header p { font-size: 0.85rem; padding: 0.5rem 0.75rem;}
 
-             #chat-interaction-area {
-                 margin-top: 1.5rem;
-                 padding-bottom: 0.5rem; /* Reduce padding jos */
-             }
-              #new-chat-button-container {
-                 max-width: none;
-                 text-align: center;
-                 margin-bottom: 0.75rem;
-              }
-              #new-chat-button {
-                  padding: 0.3rem 0.6rem;
-                  font-size: 0.8rem;
-              }
+            #chat-interaction-area {
+                margin-top: 1.5rem;
+                padding-bottom: 0.5rem; /* Reduce padding jos */
+            }
+            #new-chat-button-container {
+                max-width: none;
+                text-align: center;
+                margin-bottom: 0.75rem;
+            }
+            #new-chat-button {
+                padding: 0.3rem 0.6rem;
+                font-size: 0.8rem;
+            }
 
             #chat-container {
                 padding: 0.75rem;
-                 height: 80vh; /* Poate mări un pic înălțimea pe mobil, dar ține cont de spațiul total */
-                 max-height: none; /* Elimină max-height pe mobil */
+                height: 80vh; /* Poate mări un pic înălțimea pe mobil, dar ține cont de spațiul total */
+                max-height: none; /* Elimină max-height pe mobil */
             }
-             #messages div {
+            #messages div {
                 padding: 0.5rem 0.75rem;
             }
             form {
@@ -307,9 +295,9 @@
             }
             form input {
                 padding: 0.5rem;
-                 font-size: 0.9rem;
+                font-size: 0.9rem;
             }
-             button[type="submit"] {
+            button[type="submit"] {
                 padding: 0.5rem 1rem;
                 font-size: 0.9rem;
             }
@@ -319,7 +307,6 @@
 </head>
 <body>
 
-    <!-- Header cu titluri, creator și indicații -->
     <header>
         <div class="max-w-4xl mx-auto">
             <h1>SOCRATE AI</h1>
@@ -331,25 +318,16 @@
         </div>
     </header>
 
-    <!-- Wrapper principal pentru zona de interacțiune (buton + chat) -->
     <div id="chat-interaction-area">
-         <!-- Container pentru butonul "Nou Chat" -->
-         <div id="new-chat-button-container">
-             <!-- Buton care apelează metoda startNewChat() din Alpine.js -->
-             <button id="new-chat-button" @click="startNewChat()">Începe Conversație Nouă</button>
-         </div>
+        <div id="new-chat-button-container">
+            <button id="new-chat-button" @click="startNewChat()">Începe Conversație Nouă</button>
+        </div>
 
-        <!-- Container principal pentru caseta de chat, cu date Alpine și inițializare -->
-        <!-- x-data="chatApp()" inițializează componenta Alpine -->
-        <!-- x-init="initChat()" rulează metoda initChat la pornire -->
         <div id="chat-container" x-data="chatApp()" x-init="initChat()">
-            <!-- Zona de afișare a mesajelor -->
             <div id="messages">
-                <!-- Loop prin mesaje. Clasa 'error-message' adăugată pentru erori -->
                 <template x-for="message in messages" :key="message.id">
                     <div :class="{ 'user-message': message.role === 'user', 'assistant-message': message.role === 'assistant', 'error-message': message.isError }" x-html="message.content"></div>
                 </template>
-                <!-- Indicator de încărcare -->
                 <template x-if="isLoading">
                     <div class="typing-indicator">
                         <span></span><span></span><span></span>
@@ -357,8 +335,6 @@
                 </template>
             </div>
 
-            <!-- Formularul de input și butonul de trimitere -->
-            <!-- Folosim clase Tailwind direct pe form, input, button -->
             <form class="flex gap-3 items-center pt-2 border-t border-[var(--brand-light-blue-gray)]" @submit.prevent="sendMessage">
                 <input
                     x-model="currentMessage"
@@ -366,8 +342,7 @@
                     class="flex-grow p-3 border border-[var(--brand-light-blue)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--brand-medium-blue)] placeholder-gray-400"
                     placeholder="Scrie mesajul tău aici..."
                     :disabled="isLoading"
-                     @keydown.enter.prevent="sendMessage" <!-- Permite trimiterea cu Enter -->
-                >
+                    @keydown.enter.prevent="sendMessage" >
                 <button
                     type="submit"
                     class="send-button text-white px-6 py-3 transition duration-200 flex items-center justify-center"
@@ -397,20 +372,20 @@
 
                     // Adaugă un mesaj inițial diferit în funcție de dacă am încărcat un thread vechi
                     if (!this.threadId) {
-                         this.messages.push({
-                             id: Date.now() + '_welcome',
-                             role: 'assistant',
-                             content: "Bună! Sunt Socrate AI, gata să explorăm împreună. Cu ce gând sau idee ai dori să începem astăzi călătoria noastră socratică?"
-                         });
+                        this.messages.push({
+                            id: Date.now() + '_welcome',
+                            role: 'assistant',
+                            content: "Bună! Sunt Socrate AI, gata să explorăm împreună. Cu ce gând sau idee ai dori să începem astăzi călătoria noastră socratică?"
+                        });
                     } else {
-                         // Notă: Mesajele vechi din thread NU sunt afișate automat cu aceasta implementare.
-                         // Doar se continuă conversația pe thread-ul existent.
-                         // Dacă vrei să afișezi mesajele vechi, ar fi nevoie de un endpoint backend suplimentar.
-                          this.messages.push({
-                             id: Date.now() + '_welcome_back',
-                             role: 'assistant',
-                             content: "Bine ai revenit! Conversația noastră continuă. Cu ce gând mergem mai departe?"
-                          });
+                        // Notă: Mesajele vechi din thread NU sunt afișate automat cu aceasta implementare.
+                        // Doar se continuă conversația pe thread-ul existent.
+                        // Dacă vrei să afișezi mesajele vechi, ar fi nevoie de un endpoint backend suplimentar.
+                        this.messages.push({
+                            id: Date.now() + '_welcome_back',
+                            role: 'assistant',
+                            content: "Bine ai revenit! Conversația noastră continuă. Cu ce gând mergem mai departe?"
+                        });
                     }
                     // Asigură scroll la final după afișarea mesajului inițial
                     this.$nextTick(() => this.scrollToBottom());
@@ -437,21 +412,20 @@
                 },
 
                 // Inițiază o nouă conversație ștergând threadId-ul salvat
-                 startNewChat() {
-                     console.log("Starting new chat...");
-                     this.threadId = null; // Resetează threadId-ul în memoria aplicației
-                     localStorage.removeItem(this.localStorageKey); // Șterge threadId-ul din localStorage
-                     this.messages = []; // Curăță mesajele afișate în UI
-                     // Adaugă mesajul inițial pentru noua conversație
-                     this.messages.push({
-                         id: Date.now() + '_welcome_new',
-                         role: 'assistant',
-                         content: "Salut! Am început o nouă conversație. Cu ce idee sau întrebare vrei să pornim la drum astăzi?"
-                     });
-                      // Asigură scroll la final
-                      this.$nextTick(() => this.scrollToBottom());
-                 },
-
+                startNewChat() {
+                    console.log("Starting new chat...");
+                    this.threadId = null; // Resetează threadId-ul în memoria aplicației
+                    localStorage.removeItem(this.localStorageKey); // Șterge threadId-ul din localStorage
+                    this.messages = []; // Curăță mesajele afișate în UI
+                    // Adaugă mesajul inițial pentru noua conversație
+                    this.messages.push({
+                        id: Date.now() + '_welcome_new',
+                        role: 'assistant',
+                        content: "Salut! Am început o nouă conversație. Cu ce idee sau întrebare vrei să pornim la drum astăzi?"
+                    });
+                    // Asigură scroll la final
+                    this.$nextTick(() => this.scrollToBottom());
+                },
 
                 // Trimite mesajul către backend API
                 async sendMessage() {
@@ -485,15 +459,15 @@
                         if (!response.ok) {
                             // Încercă să extragă mesajul de eroare din răspunsul non-OK
                             let errorMsg = `HTTP error! status: ${response.status}.`;
-                             try {
-                                 const errorData = await response.json();
-                                 errorMsg = `HTTP ${response.status}: ${errorData.error || 'Unknown error'}`;
-                             } catch (jsonError) {
-                                  // Dacă răspunsul nu e JSON (ex: eroare de server internă), ia textul brut
-                                 const rawText = await response.text().catch(() => 'N/A');
-                                 errorMsg += ` Received non-JSON response: ${rawText.substring(0, 150)}...`;
-                                 console.error("Failed to parse error JSON or get response text:", jsonError);
-                             }
+                            try {
+                                const errorData = await response.json();
+                                errorMsg = `HTTP ${response.status}: ${errorData.error || 'Unknown error'}`;
+                            } catch (jsonError) {
+                                // Dacă răspunsul nu e JSON (ex: eroare de server internă), ia textul brut
+                                const rawText = await response.text().catch(() => 'N/A');
+                                errorMsg += ` Received non-JSON response: ${rawText.substring(0, 150)}...`;
+                                console.error("Failed to parse error JSON or get response text:", jsonError);
+                            }
                             throw new Error(errorMsg);
                         }
 
@@ -519,12 +493,12 @@
                     } catch (error) {
                         // Gestionează erorile (ex: eroare de rețea, eroare API)
                         console.error('Error sending message:', error);
-                         this.messages.push({
+                        this.messages.push({
                             id: Date.now() + '_error',
                             role: 'assistant', // Afișează eroarea ca un mesaj de asistent
                             content: `⛔ A apărut o eroare: ${this.escapeHtml(error.message)}. Te rog să încerci din nou.`,
                             isError: true // Folosim 'isError' pentru a aplica stilul roșu
-                         });
+                        });
                     } finally {
                         // Se execută întotdeauna la final (succes sau eroare)
                         this.isLoading = false; // Dezactivează indicatorul de încărcare
@@ -535,10 +509,10 @@
                 // Funcție pentru a scrola automat la ultimul mesaj
                 scrollToBottom() {
                     this.$nextTick(() => { // Așteaptă ca DOM-ul să se actualizeze
-                         const messagesDiv = document.getElementById('messages');
-                         if (messagesDiv) {
-                             messagesDiv.scrollTop = messagesDiv.scrollHeight; // Scrollează la fund
-                         }
+                        const messagesDiv = document.getElementById('messages');
+                        if (messagesDiv) {
+                            messagesDiv.scrollTop = messagesDiv.scrollHeight; // Scrollează la fund
+                        }
                     });
                 },
 
@@ -546,11 +520,11 @@
                 escapeHtml(unsafe) {
                     if (typeof unsafe !== 'string') return unsafe; // Returnează valorile non-string așa cum sunt
                     return unsafe
-                         .replace(/&/g, "&")
-                         .replace(/</g, "<")
-                         .replace(/>/g, ">")
-                         .replace(/"/g, """)
-                         .replace(/'/g, "'");
+                        .replace(/&/g, "&amp;")
+                        .replace(/</g, "&lt;")
+                        .replace(/>/g, "&gt;")
+                        .replace(/"/g, "&quot;")
+                        .replace(/'/g, "&#039;");
                 }
             }
         }
