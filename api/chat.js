@@ -1,132 +1,78 @@
+// Exemplu pseudocod pentru /api/chat.js
 import OpenAI from 'openai';
 
-const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-});
-
-const assistantId = process.env.ASSISTANT_ID;
-
-// Numărul maxim de încercări de a rula asistentul dacă nu returnează un mesaj imediat
-const MAX_RETRIES = 2; // Încercăm de maxim 2 ori suplimentar
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const assistantId = process.env.OPENAI_ASSISTANT_ID;
 
 export default async function handler(req, res) {
-    if (req.method !== 'POST') {
-        return res.status(405).json({ error: 'Method Not Allowed' });
-    }
+    if (req.method === 'POST') {
+        const { message, threadId, action } = req.body; // <-- Aici preiei noul 'action'
 
-    try {
-        const { message, threadId: existingThreadId } = req.body;
+        let currentThreadId = threadId;
 
-        if (!message) {
-            return res.status(400).json({ error: 'Message is required' });
-        }
+        try {
+            // NOU: Logica pentru a prelua istoricul mesajelor
+            if (action === 'get_messages' && currentThreadId) {
+                const messages = await openai.beta.threads.messages.list(currentThreadId);
+                // Filtrează și formatează mesajele pentru frontend
+                const formattedMessages = messages.data.reverse().map(msg => {
+                    const contentText = msg.content
+                        .filter(c => c.type === 'text')
+                        .map(c => c.text.value)
+                        .join('\n'); // Folosim '\n' pentru a respecta textul brut
 
-        let threadId = existingThreadId;
+                    return {
+                        id: msg.id,
+                        role: msg.role,
+                        content: contentText
+                    };
+                });
+                return res.status(200).json({ messages: formattedMessages, threadId: currentThreadId });
+            }
 
-        // Creează thread nou dacă nu există
-        if (!threadId) {
-            console.log("Creating new thread...");
-            const thread = await openai.beta.threads.create();
-            threadId = thread.id;
-            console.log("New thread created with ID:", threadId);
-        } else {
-             console.log("Using existing thread with ID:", threadId);
-        }
+            // LOGICA EXISTENTĂ: Pentru a trimite un mesaj nou și a obține un răspuns
+            if (!currentThreadId) {
+                const thread = await openai.beta.threads.create();
+                currentThreadId = thread.id;
+            }
 
-        // Adaugă mesajul utilizatorului în thread
-        console.log(`Adding message to thread ${threadId}: "${message}"`);
-        const userMessage = await openai.beta.threads.messages.create(
-            threadId,
-            {
-                role: "user",
+            await openai.beta.threads.messages.create(currentThreadId, {
+                role: 'user',
                 content: message,
+            });
+
+            let run = await openai.beta.threads.runs.create(currentThreadId, {
+                assistant_id: assistantId,
+            });
+
+            // Așteaptă finalizarea rulării (run)
+            while (run.status === 'queued' || run.status === 'in_progress' || run.status === 'cancelling') {
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                run = await openai.beta.threads.runs.retrieve(currentThreadId, run.id);
             }
-        );
-        console.log("User message added with ID:", userMessage.id);
 
-        let assistantMessage = null;
-        let retries = 0;
+            if (run.status === 'completed') {
+                const messages = await openai.beta.threads.messages.list(currentThreadId, { order: 'desc', limit: 1 });
+                const lastAssistantMessage = messages.data.find(msg => msg.role === 'assistant');
 
-        // Mecanism de Retry pentru a obține răspuns de la asistent
-        while (assistantMessage === null && retries <= MAX_RETRIES) {
-            retries++;
-            console.log(`Attempt ${retries}/${MAX_RETRIES + 1}: Running assistant ${assistantId} on thread ${threadId}...`);
-
-            // Creează și Rulează asistentul pe thread
-            let run = await openai.beta.threads.runs.create(
-                threadId,
-                {
-                    assistant_id: assistantId,
-                    // Nu adăugați instrucțiuni suplimentare aici decât dacă este absolut necesar
-                    // Ele pot suprascrie instrucțiunile principale ale asistentului
+                if (lastAssistantMessage) {
+                    return res.status(200).json({
+                        threadId: currentThreadId,
+                        assistantMessage: lastAssistantMessage,
+                    });
+                } else {
+                    return res.status(500).json({ error: "Assistant did not return a message for this run." });
                 }
-            );
-            console.log("Run created with ID:", run.id);
-
-            // Așteaptă până când rularea este finalizată
-            console.log("Polling run status...");
-            while (run.status !== 'completed' && run.status !== 'failed' && run.status !== 'cancelled' && run.status !== 'expired') {
-                await new Promise(resolve => setTimeout(resolve, 1000)); // Așteaptă 1 secunda înainte de a verifica din nou
-                run = await openai.beta.threads.runs.retrieve( threadId, run.id );
-                console.log("Run status:", run.status);
-            }
-
-            if (run.status !== 'completed') {
-                 console.error(`Run failed with status: ${run.status}`);
-                 // Dacă run-ul dă eroare, ieșim din bucla de retry
-                 throw new Error(`OpenAI run failed or was cancelled. Status: ${run.status}`);
-            }
-
-            console.log("Run completed. Retrieving messages...");
-
-            // Preia mesajele din thread, filtrate după ultimul mesaj al utilizatorului
-            // Această abordare este mai robustă dacă mesajul asistentului nu se leagă strict de run_id
-            const messages = await openai.beta.threads.messages.list(
-                threadId,
-                { order: 'desc', limit: 10 } // Preia ultimele 10 mesaje
-            );
-
-            // Găsește cel mai recent mesaj al asistentului care a apărut după mesajul utilizatorului
-            assistantMessage = messages.data.find(
-                 msg => msg.role === 'assistant' && new Date(msg.created_at * 1000) > new Date(userMessage.created_at * 1000)
-            );
-
-            if (assistantMessage) {
-                console.log(`Assistant message found after ${retries} attempt(s).`);
-                break; // Ieșim din bucla de retry dacă am găsit mesajul
             } else {
-                 console.warn(`Attempt ${retries} failed to find a new assistant message for this run.`);
-                 if (retries <= MAX_RETRIES) {
-                     console.log("Retrying...");
-                     await new Promise(resolve => setTimeout(resolve, 2000)); // Așteaptă puțin mai mult înainte de retry
-                 }
+                return res.status(500).json({ error: `Run failed with status: ${run.status}` });
             }
+
+        } catch (error) {
+            console.error('API Error:', error);
+            res.status(500).json({ error: error.message || 'An unexpected error occurred.' });
         }
-
-        // Verifică din nou dacă s-a găsit un mesaj după toate încercările
-        if (!assistantMessage) {
-             console.error(`Failed to get assistant message after ${MAX_RETRIES + 1} attempts.`);
-             // Acesta este cazul în care arătăm mesajul de eroare prietenos pe frontend
-             return res.status(200).json({
-                threadId: threadId,
-                assistantMessage: { content: [{ type: 'text', text: { value: 'Îmi pare rău, asistentul nu a putut genera un răspuns acum. Te rog să încerci din nou sau să reformulezi.' } }] },
-                // Optional: Poți semnala frontend-ului să pornească un thread nou la următorul mesaj dacă vrei
-                // resetThread: true
-             });
-        }
-
-        // Trimite răspunsul înapoi către frontend
-        res.status(200).json({
-            threadId: threadId,
-            assistantMessage: assistantMessage,
-        });
-
-    } catch (error) {
-        console.error('Error interacting with OpenAI API:', error);
-        // Trimite eroarea înapoi către frontend
-        res.status(500).json({
-            error: `A apărut o eroare la comunicarea cu AI: ${error.message || 'Eroare necunoscută'}.`,
-            threadId: req.body.threadId
-        });
+    } else {
+        res.setHeader('Allow', ['POST']);
+        res.status(405).end(`Method ${req.method} Not Allowed`);
     }
 }
