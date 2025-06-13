@@ -33,7 +33,7 @@
         header { 
             background-image: linear-gradient(to right, var(--brand-dark-blue), var(--brand-medium-blue));
             /* >>> MODIFICARI AICI: Reducem padding-ul vertical general al headerului <<< */
-            padding: 1rem 1rem; /* Redus de la 1.5rem la 1rem */
+            padding: 0.75rem 1rem; /* Redus de la 1rem la 0.75rem */
             color: var(--brand-white);
             text-align: center;
             width: 100%;
@@ -48,29 +48,27 @@
             font-weight: 800;
             color: var(--brand-white);
             text-transform: uppercase;
-            /* >>> MODIFICARI AICI: Eliminăm margin-bottom pentru a comprima spațiul <<< */
             margin-bottom: 0; 
         }
 
         header h2 {
             font-size: 1.75rem;
             color: var(--brand-white);
-            /* >>> MODIFICARI AICI: Eliminăm margin-bottom pentru a comprima spațiul <<< */
             margin-bottom: 0; 
         }
 
         /* Stiluri pentru creator, mutat acum în header, cu margini reduse */
         header h3 { 
             /* >>> MODIFICARI AICI: Reducem margin-top și margin-bottom <<< */
-            margin-top: 0.25rem; /* Redus de la 0.5rem */
+            margin-top: 0.1rem; /* Redus de la 0.25rem */
             font-size: 1rem;
             opacity: 0.9;
             color: var(--brand-white);
-            margin-bottom: 0.75rem; /* Redus de la 1.5rem */
+            margin-bottom: 0.5rem; /* Redus de la 0.75rem */
         }
 
         header p { /* Stiluri pentru instrucțiunile de utilizare, cu margine redusă */
-            margin-top: 0; /* Asigurăm că nu are margin-top */
+            margin-top: 0; 
             max-width: 800px;
             margin-left: auto;
             margin-right: auto;
@@ -87,8 +85,8 @@
             flex-direction: column;
             align-items: center; 
             flex-grow: 1; 
-            /* >>> MODIFICARI AICI: Reducem margin-top pentru a aduce chat-ul mai sus <<< */
-            margin-top: 1.5rem; /* Redus de la 2rem */
+            /* >>> MODIFICARI AICI: Reducem margin-top pentru a aduce chat-ul și mai sus <<< */
+            margin-top: 1rem; /* Redus de la 1.5rem */
             padding-bottom: 1rem; 
             padding-left: 1rem;
             padding-right: 1rem;
@@ -267,16 +265,16 @@
                 margin: 0; 
                 width: 100%; 
                 /* >>> MODIFICARI AICI: Reducem și mai mult padding-ul în header pe mobil <<< */
-                padding: 0.75rem 0.75rem; /* Redus de la 1rem */
+                padding: 0.5rem 0.75rem; /* Redus de la 0.75rem */
             }
             /* >>> MODIFICARI AICI: Font size ajustări pentru mobil <<< */
-            header h1 { font-size: 1.6rem; } /* Micșorăm și mai mult fontul pentru titlu pe mobil */
-            header h2 { font-size: 0.9rem; }    /* Micșorăm și mai mult fontul pentru subtitlu pe mobil */
-            header h3 { font-size: 0.7rem; margin-top: 0.25rem; margin-bottom: 0.5rem;} /* Ajustăm și mai mult creatorul */
-            header p { font-size: 0.75rem; padding: 0.4rem 0.6rem; margin-top: 0.25rem;} /* Ajustăm explicația */
+            header h1 { font-size: 1.4rem; } /* Micșorăm și mai mult fontul pentru titlu pe mobil */
+            header h2 { font-size: 0.8rem; }    /* Micșorăm și mai mult fontul pentru subtitlu pe mobil */
+            header h3 { font-size: 0.65rem; margin-top: 0.15rem; margin-bottom: 0.4rem;} /* Ajustăm și mai mult creatorul */
+            header p { font-size: 0.7rem; padding: 0.3rem 0.5rem; margin-top: 0.2rem;} /* Ajustăm explicația */
 
             #chat-interaction-area {
-                margin-top: 1rem; /* Redus de la 1.5rem */
+                margin-top: 0.75rem; /* Redus de la 1rem */
                 padding-bottom: 0.5rem; 
                 padding-left: 0.5rem; 
                 padding-right: 0.5rem; 
