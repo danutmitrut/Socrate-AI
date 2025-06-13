@@ -373,14 +373,14 @@
                     console.log("Initializing chat...");
                     this.loadThreadFromLocalStorage(); 
 
-                    // >>> MODIFICARE AICI: Acum apelăm fetchAndDisplayThreadMessages dacă threadId există <<<
                     if (this.threadId) {
-                        this.fetchAndDisplayThreadMessages(this.threadId);
-                        this.messages.push({ // Mesaj de bun venit înapoi, dar după mesajele vechi
+                        // >>> MODIFICARE AICI: Adăugăm mesajul "Bine ai revenit!" înainte de a încerca să preluăm istoricul <<<
+                        this.messages.push({ 
                             id: Date.now() + '_welcome_back',
                             role: 'assistant',
                             content: "Bine ai revenit! Conversația noastră continuă. Cu ce gând mergem mai departe?"
                         });
+                        this.fetchAndDisplayThreadMessages(this.threadId);
                     } else {
                         this.messages.push({
                             id: Date.now() + '_welcome',
@@ -428,39 +428,55 @@
                 // Funcție NOUĂ pentru a prelua și afișa mesajele dintr-un thread existent
                 async fetchAndDisplayThreadMessages(threadId) {
                     this.isLoading = true; // Activează indicatorul de încărcare cât timp preia mesajele
-                    this.messages = []; // Golește mesajele curente pentru a afișa istoricul
+                    // >>> MODIFICARE AICI: NU mai golim mesajele aici. Vom adăuga direct istoricul. <<<
+                    // this.messages = []; 
                     
                     try {
-                        const response = await fetch('/api/chat', { // Vom folosi același endpoint /api/chat
+                        const response = await fetch('/api/chat', { 
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ threadId: threadId, action: 'get_messages' }) // Adăugăm o acțiune pentru backend
+                            body: JSON.stringify({ threadId: threadId, action: 'get_messages' }) 
                         });
 
                         if (!response.ok) {
                             const errorData = await response.json().catch(() => ({ error: "Server error, not valid JSON" }));
-                            throw new Error(`HTTP ${response.status}: ${errorData.error || 'Unknown error'}`);
+                            // >>> MODIFICARE AICI: Schimbăm mesajul de eroare dacă nu sunt mesaje <<<
+                            const errorMessage = `HTTP ${response.status}: ${errorData.error || 'Unknown error'}`;
+                            // Nu aruncăm o eroare aici, ci o afișăm ca mesaj.
+                            this.messages.push({
+                                id: Date.now() + '_error_history_fetch',
+                                role: 'assistant',
+                                content: `⛔ Nu am putut încărca istoricul conversației din cauza unei erori tehnice. (${this.escapeHtml(errorMessage)})`,
+                                isError: true
+                            });
+                            return; // Ieșim din funcție, nu mai procesăm.
                         }
 
                         const data = await response.json();
                         
-                        // Procesează mesajele primite de la backend
-                        data.messages.forEach(msg => {
-                            // Asistentul OpenAI returnează mesaje cu "content" ca array de obiecte
-                            // Trebuie să verificăm tipul de rol și să formatăm conținutul
-                            const formattedContent = msg.content
-                                .filter(item => item.type === 'text')
-                                .map(item => this.escapeHtml(item.text.value))
-                                .join('<br>');
-
-                            this.messages.push({
-                                id: msg.id, // ID-ul mesajului de la OpenAI
-                                role: msg.role, // 'user' sau 'assistant'
-                                content: formattedContent,
-                                // isError: false // Nu ar trebui să fie erori în istoricul valid
+                        // >>> MODIFICARE AICI: Verificăm dacă data.messages este un array valid înainte de a itera <<<
+                        if (Array.isArray(data.messages) && data.messages.length > 0) {
+                            // Prepend messages to ensure they appear before the "Bine ai revenit!" message
+                            const historyMessages = [];
+                            data.messages.forEach(msg => {
+                                const formattedContent = msg.content; // Backend-ul trimite deja textul formatat, nu mai trebuie filter/map/join
+                                historyMessages.push({
+                                    id: msg.id, 
+                                    role: msg.role, 
+                                    content: this.escapeHtml(formattedContent) // Sanitizăm aici
+                                });
                             });
-                        });
-                        this.scrollToBottom(); // Scrollează la final după încărcarea istoricului
+                            // Adaugă mesajele istoricului la începutul array-ului, după mesajul de bun venit înapoi
+                            this.messages = [...historyMessages, ...this.messages]; 
+                        } else {
+                            // Dacă nu sunt mesaje în istoric, dar threadId există, afișăm un mesaj neutru
+                            this.messages.push({
+                                id: Date.now() + '_empty_history',
+                                role: 'assistant',
+                                content: "Nu am găsit mesaje anterioare în această conversație salvată, dar putem continua de aici!"
+                            });
+                        }
+                        this.scrollToBottom(); 
 
                     } catch (error) {
                         console.error('Error fetching thread messages:', error);
@@ -471,7 +487,7 @@
                             isError: true
                         });
                     } finally {
-                        this.isLoading = false; // Dezactivează indicatorul de încărcare
+                        this.isLoading = false; 
                     }
                 },
 
