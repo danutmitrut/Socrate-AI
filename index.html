@@ -30,12 +30,9 @@
             flex-direction: column;
             font-family: ui-sans-serif, system-ui, sans-serif; /* Font generic sans-serif */
             color: var(--brand-text-dark);
-            /* Spațiere generală pe mobil (padding-ul tău existent) */
-            padding-left: 1rem;
-            padding-right: 1rem;
-            padding-top: 1rem; /* Adaugă padding și sus */
-            padding-bottom: 1rem; /* Adaugă padding și jos */
-            box-sizing: border-box; /* Include padding-ul în lățimea/înălțimea totală */
+            /* Spațiere generală consistentă pe toate laturile */
+            padding: 1rem;
+            box-sizing: border-box;
         }
 
         /* Header full-width cu gradient și stiluri impunătoare */
@@ -45,11 +42,10 @@
             color: var(--brand-white);
             text-align: center;
             /* Anulează padding-ul body și extinde header-ul */
-            margin-left: -1rem;
-            margin-right: -1rem;
-            width: calc(100% + 2rem);
+            margin: -1rem; /* Anulează padding-ul de 1rem de pe body pe toate laturile */
+            width: calc(100% + 2rem); /* Compensează margin-ul */
             flex-shrink: 0; /* Nu lasă header-ul să se micșoreze */
-            border-radius: 0.75rem; /* Colțuri rotunjite (păstrează-le deși e full-width) */
+            /* border-radius a fost scos, nu se vede la full width */
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
              /* Margin-bottom a fost mutat în wrapper pt chat */
         }
@@ -79,8 +75,8 @@
             line-height: 1.5;
         }
          header h3 { /* Stiluri pentru creator, mutat acum în header */
-             margin-top: 1.5rem; /* Spațiu deasupra */
-             font-size: 1rem; /* Ajustat puțin mărimea */
+             margin-top: 1.5rem;
+             font-size: 1rem;
              opacity: 0.9;
              color: var(--brand-white);
          }
@@ -93,6 +89,8 @@
              align-items: center; /* Centrează conținutul (buton si chat) orizontal */
              flex-grow: 1; /* Ocupă tot spațiul vertical rămas */
              margin-top: 2rem; /* Spațiu între header și zona de interacțiune */
+             /* Adaugă padding la fundul wrapperului, nu pe body */
+             padding-bottom: 1rem;
         }
 
         /* Container pentru butonul "Nou Chat" */
@@ -135,8 +133,8 @@
             /* Dimensiuni și responsivitate (preluate din codul tău) */
             width: 100%;
             max-width: 467px;
-            height: 70vh;
-            max-height: 700px;
+            height: 70vh; /* Păstrează înălțimea relativă */
+            max-height: 700px; /* Limitează la o înălțime fixă pe ecrane mari */
         }
 
         /* Zona de afișare a mesajelor */
@@ -178,7 +176,6 @@
              color: var(--brand-white);
              align-self: flex-start;
              margin-right: auto;
-             /* Poți adăuga un iconiță sau altceva dacă vrei */
          }
 
 
@@ -214,16 +211,17 @@
             40% { transform: scale(1.0); }
         }
 
-        /* Stiluri pentru form și input (păstrate și ajustate) */
-        form { /* Fără clasă `flex`, o setăm inline cu Tailwind */
+        /* Stiluri pentru form și input */
+        form {
             display: flex;
             gap: 0.75rem;
             align-items: center;
             padding-top: 0.5rem;
             border-top: 1px solid var(--brand-light-blue-gray);
+             flex-shrink: 0; /* Previne micsorarea form-ului */
         }
 
-        form input { /* Fără clase Tailwind aici, definite în `<style>` pt control fin */
+        form input {
             flex-grow: 1;
             padding: 0.75rem;
             border: 1px solid var(--brand-light-blue);
@@ -239,18 +237,18 @@
              color: #9ca3af;
          }
 
-        /* Stiluri pentru butonul Trimite (folosind clasa send-button + stiluri in <style> ) */
-        button[type="submit"] { /* Selector mai specific */
+        /* Stiluri pentru butonul Trimite */
+        button[type="submit"] {
             text-align: center;
             padding: 0.75rem 1.5rem;
-            border-radius: 0.5rem;
+            border-radius: 0.5rem; /* Foloseste 0.5rem pt consistenta cu input */
             color: var(--brand-white);
             transition: background-color 0.2s ease-in-out, opacity 0.2s ease-in-out;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            border: none; /* Elimină bordura implicită a butonului */
+            border: none;
         }
 
         button[type="submit"]:enabled {
@@ -267,19 +265,15 @@
         }
 
 
-        /* Responsive adjustments for smaller screens (ajustate peste ale tale) */
+        /* Responsive adjustments (ajustate peste ale tale) */
         @media (max-width: 640px) {
              body {
-                padding-left: 0.5rem;
-                padding-right: 0.5rem;
-                 padding-top: 0.5rem;
-                 padding-bottom: 0.5rem;
+                padding: 0.5rem; /* Reduce padding-ul general */
             }
             header {
-                 margin-left: -0.5rem;
-                 margin-right: -0.5rem;
-                 width: calc(100% + 1rem);
-                 padding: 1.5rem 0.75rem; /* Reduce padding header */
+                 margin: -0.5rem; /* Anulează padding-ul nou de pe body */
+                 width: calc(100% + 1rem); /* Compensează margin-ul */
+                 padding: 1.5rem 0.75rem; /* Reduce padding interior header */
             }
              header h1 { font-size: 2rem; }
              header h2 { font-size: 1.1rem; }
@@ -287,11 +281,12 @@
               header p { font-size: 0.85rem; padding: 0.5rem 0.75rem;}
 
              #chat-interaction-area {
-                 margin-top: 1.5rem; /* Spațiu mai mic pe mobil */
+                 margin-top: 1.5rem;
+                 padding-bottom: 0.5rem; /* Reduce padding jos */
              }
               #new-chat-button-container {
-                 max-width: none; /* Ocupă lățimea wrapperului */
-                 text-align: center; /* Centrează butonul */
+                 max-width: none;
+                 text-align: center;
                  margin-bottom: 0.75rem;
               }
               #new-chat-button {
@@ -300,21 +295,21 @@
               }
 
             #chat-container {
-                padding: 0.75rem; /* Spațiu interior mai mic */
-                 height: 75vh; /* Poate mări un pic înălțimea pe mobil */
+                padding: 0.75rem;
+                 height: 80vh; /* Poate mări un pic înălțimea pe mobil, dar ține cont de spațiul total */
                  max-height: none; /* Elimină max-height pe mobil */
             }
              #messages div {
-                padding: 0.5rem 0.75rem; /* Bule de mesaj mai mici */
+                padding: 0.5rem 0.75rem;
             }
-            form { /* Ajustări form pe mobil */
+            form {
                 gap: 0.5rem;
             }
-            form input { /* Ajustări input pe mobil */
+            form input {
                 padding: 0.5rem;
                  font-size: 0.9rem;
             }
-             button[type="submit"] { /* Ajustări buton pe mobil */
+             button[type="submit"] {
                 padding: 0.5rem 1rem;
                 font-size: 0.9rem;
             }
@@ -322,7 +317,7 @@
 
     </style>
 </head>
-<body class="font-sans text-gray-800">
+<body>
 
     <!-- Header cu titluri, creator și indicații -->
     <header>
@@ -345,6 +340,8 @@
          </div>
 
         <!-- Container principal pentru caseta de chat, cu date Alpine și inițializare -->
+        <!-- x-data="chatApp()" inițializează componenta Alpine -->
+        <!-- x-init="initChat()" rulează metoda initChat la pornire -->
         <div id="chat-container" x-data="chatApp()" x-init="initChat()">
             <!-- Zona de afișare a mesajelor -->
             <div id="messages">
@@ -408,6 +405,7 @@
                     } else {
                          // Notă: Mesajele vechi din thread NU sunt afișate automat cu aceasta implementare.
                          // Doar se continuă conversația pe thread-ul existent.
+                         // Dacă vrei să afișezi mesajele vechi, ar fi nevoie de un endpoint backend suplimentar.
                           this.messages.push({
                              id: Date.now() + '_welcome_back',
                              role: 'assistant',
@@ -485,7 +483,7 @@
 
                         // Verifică dacă răspunsul HTTP este OK (status 2xx)
                         if (!response.ok) {
-                            // Încearcă să extragă mesajul de eroare din răspunsul non-OK
+                            // Încercă să extragă mesajul de eroare din răspunsul non-OK
                             let errorMsg = `HTTP error! status: ${response.status}.`;
                              try {
                                  const errorData = await response.json();
