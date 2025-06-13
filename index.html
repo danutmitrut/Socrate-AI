@@ -19,31 +19,35 @@
             --brand-red-error: #dc2626; /* Culoare pentru mesaje de eroare */
         }
 
-        /* Gradient pentru fundalul paginii și spațierea generală */
+        /* Gradient pentru fundalul paginii */
         body {
             background-image: linear-gradient(to bottom, var(--brand-light-blue-gray), var(--brand-medium-blue));
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             position: relative;
-            padding-left: 1rem; /* Spațiu lateral pe stânga */
-            padding-right: 1rem; /* Spațiu lateral pe dreapta */
             box-sizing: border-box; /* Include padding-ul în lățime/înălțime */
+            /* !!! Am scos padding-ul de aici. Îl vom aplica doar la wrapper-ul de chat !!! */
         }
 
         /* Header full-width cu gradient și stiluri impunătoare */
-        .main-header {
+        header { /* Renaming .main-header to header for simplicity since it's the only header */
             background-image: linear-gradient(to right, var(--brand-dark-blue), var(--brand-medium-blue));
             padding: 2rem 1rem;
             color: var(--brand-white);
             text-align: center;
-            margin-left: -1rem; /* Anulează padding-ul body pe stânga */
-            margin-right: -1rem; /* Anulează padding-ul body pe dreapta */
-            width: calc(100% + 2rem); /* Întinde headerul pe toată lățimea, inclusiv padding-ul body */
+            /* >>> MODIFICARI AICI: Eliminăm marginile negative și width: calc() <<< */
+            width: 100%; /* Header-ul va ocupa întreaga lățime disponibilă */
+            box-sizing: border-box; /* Asigură că padding-ul header-ului nu-l face mai lat decât 100% */
             flex-shrink: 0; /* Nu lasă header-ul să se micșoreze */
+            /* !!! Am scos margin-ul negativ și width: calc() !!! */
+            
+            /* Ajustăm padding-ul textului din header pentru a se încadra bine */
+            padding-left: 1rem; 
+            padding-right: 1rem;
         }
 
-        .main-header h1 {
+        header h1 {
             font-size: 3.5rem;
             font-weight: 800;
             color: var(--brand-white);
@@ -51,12 +55,12 @@
             margin-bottom: 0.5rem;
         }
 
-        .main-header h2 {
+        header h2 {
             font-size: 1.75rem;
             color: var(--brand-white);
         }
 
-        .main-header p {
+        header p { /* Stiluri pentru instrucțiunile de utilizare */
             margin-top: 1.5rem;
             max-width: 800px;
             margin-left: auto;
@@ -65,9 +69,9 @@
             background-color: rgba(0,0,0,0.2);
             padding: 0.75rem 1.5rem;
             border-radius: 0.75rem;
+            line-height: 1.5;
         }
-
-        .main-header h3 { /* Stiluri pentru creator, mutat acum în header */
+        header h3 { /* Stiluri pentru creator, mutat acum în header */
             margin-top: 1.5rem;
             font-size: 1rem;
             opacity: 0.9;
@@ -82,6 +86,11 @@
             flex-grow: 1; /* Ocupă tot spațiul vertical rămas */
             margin-top: 2rem; /* Spațiu între header și zona de interacțiune */
             padding-bottom: 1rem; /* Padding la fundul wrapperului */
+            /* >>> MODIFICARI AICI: Adăugăm padding lateral general <<< */
+            padding-left: 1rem;
+            padding-right: 1rem;
+            width: 100%; /* Ocupă toată lățimea disponibilă */
+            box-sizing: border-box; /* Include padding-ul în lățime/înălțime */
         }
 
         /* Container pentru butonul "Nou Chat" */
@@ -121,7 +130,7 @@
             position: relative;
 
             /* Dimensiuni și responsivitate */
-            width: 100%;
+            width: 100%; /* Acum se va adapta la padding-ul de pe #chat-interaction-area */
             max-width: 467px;
             height: 70vh; /* Păstrează înălțimea relativă */
             max-height: 700px; /* Limitează la o înălțime fixă pe ecrane mari */
@@ -256,11 +265,11 @@
         /* Responsive adjustments */
         @media (max-width: 640px) {
             body {
-                padding: 0.5rem; /* Reduce padding-ul general */
+                padding: 0; /* Eliminăm padding-ul de pe body pe mobil, lăsăm doar wrapper-ul să gestioneze */
             }
             header {
-                margin: -0.5rem; /* Anulează padding-ul nou de pe body */
-                width: calc(100% + 1rem); /* Compensează margin-ul */
+                margin: 0; /* Eliminăm margin-ul negativ, headerul ocupă 100% implicit */
+                width: 100%; /* Asigurăm 100% lățime */
                 padding: 1.5rem 0.75rem; /* Reduce padding interior header */
             }
             header h1 { font-size: 2rem; }
@@ -271,6 +280,8 @@
             #chat-interaction-area {
                 margin-top: 1.5rem;
                 padding-bottom: 0.5rem; /* Reduce padding jos */
+                padding-left: 0.5rem; /* Adăugăm padding lateral direct aici */
+                padding-right: 0.5rem; /* Adăugăm padding lateral direct aici */
             }
             #new-chat-button-container {
                 max-width: none;
