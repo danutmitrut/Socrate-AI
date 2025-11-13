@@ -82,7 +82,21 @@ export default async function handler(req, res) {
 
       case 'invoice.payment_succeeded': {
         const invoice = event.data.object;
+
+        // Skip if no subscription (one-time payment)
+        if (!invoice.subscription) {
+          console.log('Invoice payment succeeded but no subscription found - skipping');
+          break;
+        }
+
         const subscription = await stripe.subscriptions.retrieve(invoice.subscription);
+
+        // Skip if no userId in metadata
+        if (!subscription.metadata || !subscription.metadata.userId) {
+          console.log('Subscription has no userId metadata - skipping');
+          break;
+        }
+
         const userId = parseInt(subscription.metadata.userId);
 
         // Calculate subscription end date
