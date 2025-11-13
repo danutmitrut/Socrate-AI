@@ -28,7 +28,6 @@ export default async function handler(req, res) {
         messages_used,
         messages_limit,
         created_at,
-        free_expires_at,
         subscription_ends_at
       FROM users
       ORDER BY created_at DESC
@@ -44,7 +43,6 @@ export default async function handler(req, res) {
         messagesUsed: user.messages_used,
         messagesLimit: user.messages_limit,
         createdAt: user.created_at,
-        freeExpiresAt: user.free_expires_at,
         subscriptionEndsAt: user.subscription_ends_at
       }))
     });
