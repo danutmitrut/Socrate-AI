@@ -56,11 +56,16 @@ export default async function handler(req, res) {
         if (session.mode === 'subscription') {
           const subscription = await stripe.subscriptions.retrieve(session.subscription);
 
+          // Calculate subscription end date (current_period_end is Unix timestamp in seconds)
+          const subscriptionEndDate = subscription.current_period_end
+            ? new Date(subscription.current_period_end * 1000)
+            : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // Default: 30 days from now
+
           // Update user subscription in database
           await updateUserSubscription(userId, {
             stripeCustomerId: session.customer,
             stripeSubscriptionId: subscription.id,
-            subscriptionEndsAt: new Date(subscription.current_period_end * 1000)
+            subscriptionEndsAt: subscriptionEndDate
           });
 
           // Update Mailerlite with paid status
@@ -80,11 +85,16 @@ export default async function handler(req, res) {
         const subscription = await stripe.subscriptions.retrieve(invoice.subscription);
         const userId = parseInt(subscription.metadata.userId);
 
+        // Calculate subscription end date
+        const subscriptionEndDate = subscription.current_period_end
+          ? new Date(subscription.current_period_end * 1000)
+          : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+
         // Renew subscription
         await updateUserSubscription(userId, {
           stripeCustomerId: invoice.customer,
           stripeSubscriptionId: subscription.id,
-          subscriptionEndsAt: new Date(subscription.current_period_end * 1000)
+          subscriptionEndsAt: subscriptionEndDate
         });
 
         console.log(`Subscription renewed for user ${userId}`);
