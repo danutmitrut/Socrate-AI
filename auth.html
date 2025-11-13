@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autentificare - Socrate AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --brand-lightest-green-blue: #d9e9d3;
+            --brand-light-blue-gray: #a2c4c9;
+            --brand-light-blue: #6fa8dc;
+            --brand-medium-blue: #3d84c6;
+            --brand-dark-blue: #0c5394;
+            --brand-white: #FFFFFF;
+            --brand-text-dark: #2d3748;
+            --brand-red-error: #dc2626;
+        }
+
+        body {
+            background-image: linear-gradient(to bottom, var(--brand-light-blue-gray), var(--brand-medium-blue));
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .auth-container {
+            background-color: var(--brand-white);
+            border-radius: 1rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .auth-header h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--brand-dark-blue);
+            margin-bottom: 0.5rem;
+        }
+
+        .auth-header p {
+            color: var(--brand-text-dark);
+            font-size: 0.95rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--brand-text-dark);
+            font-weight: 600;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid var(--brand-light-blue-gray);
+            border-radius: 0.5rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .form-group input:focus {
+            border-color: var(--brand-medium-blue);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 0.875rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background-color: var(--brand-dark-blue);
+            color: var(--brand-white);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background-color: var(--brand-medium-blue);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            color: var(--brand-medium-blue);
+            border: 2px solid var(--brand-medium-blue);
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--brand-medium-blue);
+            color: var(--brand-white);
+        }
+
+        .error-message {
+            background-color: #fee;
+            color: var(--brand-red-error);
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .success-message {
+            background-color: #efe;
+            color: #059669;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .toggle-form {
+            text-align: center;
+            margin-top: 1.5rem;
+            color: var(--brand-text-dark);
+        }
+
+        .toggle-form a {
+            color: var(--brand-medium-blue);
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .toggle-form a:hover {
+            text-decoration: underline;
+        }
+
+        .benefits {
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--brand-light-blue-gray);
+        }
+
+        .benefits h3 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--brand-dark-blue);
+            margin-bottom: 0.75rem;
+        }
+
+        .benefits ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .benefits li {
+            padding: 0.5rem 0;
+            color: var(--brand-text-dark);
+            font-size: 0.85rem;
+        }
+
+        .benefits li:before {
+            content: "✓ ";
+            color: var(--brand-medium-blue);
+            font-weight: bold;
+            margin-right: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container" id="authContainer">
+        <!-- Login Form -->
+        <div id="loginForm">
+            <div class="auth-header">
+                <h1>SOCRATE AI</h1>
+                <p>Bine ai revenit! Autentifică-te pentru a continua.</p>
+            </div>
+
+            <div id="errorMessage" class="error-message" style="display: none;"></div>
+            <div id="successMessage" class="success-message" style="display: none;"></div>
+
+            <form id="loginFormElement">
+                <div class="form-group">
+                    <label for="loginEmail">Email</label>
+                    <input type="email" id="loginEmail" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Parolă</label>
+                    <input type="password" id="loginPassword" required>
+                </div>
+                <button type="submit" class="btn btn-primary" id="loginBtn">
+                    Autentificare
+                </button>
+            </form>
+
+            <div class="toggle-form">
+                Nu ai cont? <a href="#" id="showRegister">Înregistrează-te gratuit</a>
+            </div>
+        </div>
+
+        <!-- Register Form -->
+        <div id="registerForm" style="display: none;">
+            <div class="auth-header">
+                <h1>SOCRATE AI</h1>
+                <p>Creează un cont gratuit și testează 72 de ore!</p>
+            </div>
+
+            <div id="registerErrorMessage" class="error-message" style="display: none;"></div>
+
+            <form id="registerFormElement">
+                <div class="form-group">
+                    <label for="registerEmail">Email</label>
+                    <input type="email" id="registerEmail" required>
+                </div>
+                <div class="form-group">
+                    <label for="registerPassword">Parolă (min. 8 caractere)</label>
+                    <input type="password" id="registerPassword" required minlength="8">
+                </div>
+                <div class="form-group">
+                    <label for="registerPasswordConfirm">Confirmă Parola</label>
+                    <input type="password" id="registerPasswordConfirm" required minlength="8">
+                </div>
+                <button type="submit" class="btn btn-primary" id="registerBtn">
+                    Creează Cont Gratuit
+                </button>
+            </form>
+
+            <div class="benefits">
+                <h3>Ce primești gratuit:</h3>
+                <ul>
+                    <li>72 ore de acces complet</li>
+                    <li>20 de mesaje cu Socrate AI</li>
+                    <li>Experiență maieutică imersivă</li>
+                    <li>Fără card necesar</li>
+                </ul>
+            </div>
+
+            <div class="toggle-form">
+                Ai deja cont? <a href="#" id="showLogin">Autentifică-te</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = window.location.origin;
+
+        // Toggle between login and register forms
+        document.getElementById('showRegister').addEventListener('click', (e) => {
+            e.preventDefault();
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'block';
+            clearMessages();
+        });
+
+        document.getElementById('showLogin').addEventListener('click', (e) => {
+            e.preventDefault();
+            document.getElementById('registerForm').style.display = 'none';
+            document.getElementById('loginForm').style.display = 'block';
+            clearMessages();
+        });
+
+        // Login handler
+        document.getElementById('loginFormElement').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('loginBtn');
+            btn.disabled = true;
+            btn.textContent = 'Se autentifică...';
+            clearMessages();
+
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+
+            try {
+                const response = await fetch(`${API_URL}/api/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Eroare la autentificare');
+                }
+
+                // Save token
+                localStorage.setItem('auth_token', data.token);
+                localStorage.setItem('user', JSON.stringify(data.user));
+
+                showSuccess('Autentificare reușită! Redirecționare...');
+
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 1000);
+
+            } catch (error) {
+                showError(error.message);
+                btn.disabled = false;
+                btn.textContent = 'Autentificare';
+            }
+        });
+
+        // Register handler
+        document.getElementById('registerFormElement').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('registerBtn');
+            btn.disabled = true;
+            btn.textContent = 'Se creează contul...';
+            clearMessages('register');
+
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+            const passwordConfirm = document.getElementById('registerPasswordConfirm').value;
+
+            if (password !== passwordConfirm) {
+                showError('Parolele nu coincid', 'register');
+                btn.disabled = false;
+                btn.textContent = 'Creează Cont Gratuit';
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/api/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Eroare la înregistrare');
+                }
+
+                // Save token
+                localStorage.setItem('auth_token', data.token);
+                localStorage.setItem('user', JSON.stringify(data.user));
+
+                // Redirect to main page
+                window.location.href = '/?welcome=true';
+
+            } catch (error) {
+                showError(error.message, 'register');
+                btn.disabled = false;
+                btn.textContent = 'Creează Cont Gratuit';
+            }
+        });
+
+        function showError(message, form = 'login') {
+            const errorEl = form === 'login'
+                ? document.getElementById('errorMessage')
+                : document.getElementById('registerErrorMessage');
+            errorEl.textContent = message;
+            errorEl.style.display = 'block';
+        }
+
+        function showSuccess(message) {
+            const successEl = document.getElementById('successMessage');
+            successEl.textContent = message;
+            successEl.style.display = 'block';
+        }
+
+        function clearMessages(form = 'login') {
+            document.getElementById('errorMessage').style.display = 'none';
+            document.getElementById('successMessage').style.display = 'none';
+            document.getElementById('registerErrorMessage').style.display = 'none';
+        }
+
+        // Check if already logged in
+        const token = localStorage.getItem('auth_token');
+        if (token) {
+            window.location.href = '/';
+        }
+    </script>
+</body>
+</html>
