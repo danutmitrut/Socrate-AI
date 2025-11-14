@@ -82,12 +82,25 @@
             padding: 2rem;
             color: var(--brand-white);
             display: flex;
-            align-items: center;
+            flex-direction: column;
             justify-content: center;
             text-align: left;
             line-height: 1.8;
-            font-size: 1.1rem;
+            font-size: 1rem;
             backdrop-filter: blur(10px);
+            gap: 1.5rem;
+        }
+
+        #hook-box p {
+            margin: 0;
+        }
+
+        #hook-box .disclaimer {
+            font-size: 0.75rem;
+            font-style: italic;
+            opacity: 0.85;
+            line-height: 1.6;
+            margin-top: auto;
         }
 
         /* Chat area (center) */
@@ -331,6 +344,14 @@
         <div id="hook-box">
             <p>
                 Dă-ți voie să explorezi cu Socrate AI dimensiunile profunde ale introspecției. Când consideri că ai explorat suficient solicită-i să sumarizeze dialogul parcurs.
+            </p>
+
+            <p>
+                Introspecția este călătoria alchimică ce transformă confuzia în claritate. Alături de Socrate AI, fiecare conversație devine un laborator interior, unde întrebările distilează gânduri și dau naștere înțelepciunii personale.
+            </p>
+
+            <p class="disclaimer">
+                Disclaimer: Socrate AI facilitează dialogul exploratoriu și introspecția, însă nu oferă servicii de terapie, consiliere psihologică sau diagnostic clinic. Pentru orice problemă de natură psihologică sau medicală, te rugăm să consulți un specialist autorizat.
             </p>
         </div>
 
