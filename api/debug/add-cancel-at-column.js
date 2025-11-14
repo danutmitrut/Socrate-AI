@@ -1,21 +1,10 @@
 import { sql } from '@vercel/postgres';
 
 export default async function handler(req, res) {
-  // Security check - use DEBUG_SECRET like other debug endpoints
-  const debugSecret = req.headers['x-debug-secret'];
-
-  if (!process.env.DEBUG_SECRET) {
-    return res.status(403).json({
-      error: 'DEBUG_SECRET not configured',
-      message: 'Set DEBUG_SECRET in Vercel environment variables to use this endpoint'
-    });
-  }
-
-  if (debugSecret !== process.env.DEBUG_SECRET) {
-    return res.status(401).json({
-      error: 'Unauthorized',
-      message: 'Invalid or missing DEBUG_SECRET. Send via x-debug-secret header.'
-    });
+  // Security check
+  const secret = req.headers['x-db-init-secret'];
+  if (secret !== process.env.DB_INIT_SECRET) {
+    return res.status(403).json({ error: 'Forbidden - Invalid secret' });
   }
 
   try {
