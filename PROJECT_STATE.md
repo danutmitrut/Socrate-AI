@@ -1,5 +1,5 @@
 # Project State - SOCRATE-AI
-**Data:** 14 noiembrie 2025, 18:45
+**Data:** 14 noiembrie 2025, 22:30
 **Status:** 🚀 LIVE MODE + DORMANT ACCOUNT SYSTEM ACTIV!
 
 ---
@@ -42,6 +42,12 @@
 - [x] **Cancel subscription UI bug** - Buton dispare după anulare ✅
 - [x] **Date display bug (01.01.1970)** - Fixed cu fallback logic ✅
 - [x] **Free tier expiration edge cases** - Rezolvate cu dormant system ✅
+- [x] **Test Mode subscription blocking cancellation (14 nov, 22:00)** - ✅ REZOLVAT
+  - Problemă: User avea Test Mode subscription ID în database, dar app rula pe Live Mode
+  - Când încerca să anuleze subscription → 500 error (Live API nu poate accesa Test subscriptions)
+  - Soluție: Creat `/api/debug/clear-test-subscription` endpoint
+  - Endpoint curăță toate datele Stripe test și resetează cont la free tier activ
+  - User poate acum să se aboneze din nou cu Live Mode Stripe ✅
 
 ### 📊 Status Curent
 **URL Live:** https://socrate-ai-8teu.vercel.app
@@ -244,7 +250,9 @@
     webhook.js - ✅ Updated cu dormant logic
     cancel-subscription.js - ✅ Fixed date bug
   /debug - Tools debugging
-    add-account-status-column.js - ⭐ NOU! Migration script
+    add-account-status-column.js - ⭐ Migration script
+    check-my-subscription.js - ⭐ NOU! Check subscription details
+    clear-test-subscription.js - ⭐ NOU! Clear test mode subscriptions
   chat.js - ✅ Updated cu dormant handling
   init-db.js - Inițializare database
 /lib
@@ -329,12 +337,12 @@ MAILERLITE_API_KEY - (opțional) Mailerlite API key
 
 ## 📊 Commits & Deployment History
 
-**Last Commit:** `c78be4e` - "Implement FAZA 1: Dormant Account System (Free Tier V2 Model B+)"
+**Last Commit:** `e8098ab` - "Fix clear-test-subscription endpoint - use sql instead of query"
 **Branch:** main
 **Deployment Status:** ✅ Live on Vercel
 **Migration Status:** ✅ account_status column deployed
 
-**Files Modified (14 nov, 18:30):**
+**Session 1 - Files Modified (14 nov, 18:30):**
 - STRATEGY_FREE_TIER_V2.md (created)
 - api/auth/me.js
 - api/auth/register.js
@@ -344,10 +352,20 @@ MAILERLITE_API_KEY - (opțional) Mailerlite API key
 - app.js
 - lib/db.js
 
-**Total Changes:**
+**Session 2 - Files Modified (14 nov, 22:00-22:30):**
+- api/debug/check-my-subscription.js (created) - Endpoint pentru verificare detalii subscription
+- api/debug/clear-test-subscription.js (created) - Endpoint pentru curățare test subscriptions
+- PROJECT_STATE.md (updated) - Actualizat cu session summary
+
+**Total Changes Session 1:**
 - 8 files changed
 - 526 insertions(+)
 - 29 deletions(-)
+
+**Total Changes Session 2:**
+- 3 files changed
+- 95 insertions(+)
+- 3 deletions(-)
 
 ---
 
