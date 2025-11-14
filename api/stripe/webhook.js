@@ -1,5 +1,6 @@
 import Stripe from 'stripe';
-import { updateUserSubscription, isStripeEventProcessed, recordStripeEvent, clearSubscriptionCancelAt } from '../../lib/db.js';
+import { sql } from '@vercel/postgres';
+import { updateUserSubscription, isStripeEventProcessed, recordStripeEvent, clearSubscriptionCancelAt, setAccountActive, setAccountDormant } from '../../lib/db.js';
 import { updateMailerliteSubscriber } from '../../lib/mailerlite.js';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
@@ -75,6 +76,9 @@ export default async function handler(req, res) {
             subscriptionEndsAt: subscriptionEndDate
           });
 
+          // Reactivate account (in case it was dormant)
+          await setAccountActive(userId);
+
           // Update Mailerlite with paid status
           const customer = await stripe.customers.retrieve(session.customer);
           await updateMailerliteSubscriber(customer.email, {
@@ -124,6 +128,9 @@ export default async function handler(req, res) {
           subscriptionEndsAt: subscriptionEndDate
         });
 
+        // Reactivate account (in case it was dormant)
+        await setAccountActive(userId);
+
         // Clear cancel_at if subscription was renewed (customer re-subscribed)
         await clearSubscriptionCancelAt(userId);
 
@@ -142,16 +149,26 @@ export default async function handler(req, res) {
         const subscription = event.data.object;
         const userId = parseInt(subscription.metadata.userId);
 
-        // Clear cancel_at when subscription is actually deleted
-        await clearSubscriptionCancelAt(userId);
+        // Downgrade user to dormant (NOT active free)
+        await sql`
+          UPDATE users
+          SET
+            subscription_type = 'free',
+            account_status = 'dormant',
+            messages_limit = 0,
+            messages_used = 0,
+            stripe_subscription_id = NULL,
+            subscription_ends_at = NULL,
+            subscription_cancel_at = NULL
+          WHERE id = ${userId}
+        `;
 
         // Record event as processed
         await recordStripeEvent(event.id, event.type, userId, {
           subscription_id: subscription.id
         });
 
-        // Mark subscription as expired (handled by checkUserLimit function)
-        console.log(`Subscription canceled for user ${userId}`);
+        console.log(`Subscription ended - user ${userId} set to dormant`);
         break;
       }
 

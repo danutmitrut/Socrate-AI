@@ -44,6 +44,7 @@ export default async function handler(req, res) {
         id: user.id,
         email: user.email,
         subscriptionType: user.subscription_type,
+        accountStatus: user.account_status,
         messagesUsed: user.messages_used,
         messagesLimit: user.messages_limit,
         createdAt: user.created_at,

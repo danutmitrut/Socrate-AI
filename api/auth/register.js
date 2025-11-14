@@ -39,36 +39,26 @@ export default async function handler(req, res) {
       return res.status(409).json({ error: 'Un cont cu acest email există deja' });
     }
 
-    // Get client IP and check for abuse
+    // Get client IP
     const clientIp = getClientIp(req);
     const ipCheck = await checkIpAbuse(clientIp);
 
-    if (ipCheck) {
-      // IP already has an account
+    // Check if IP already has an active account (not dormant or expired)
+    if (ipCheck && ipCheck.account_status === 'active') {
       const hoursSinceCreation = (Date.now() - new Date(ipCheck.created_at).getTime()) / (1000 * 60 * 60);
 
       if (ipCheck.subscription_type === 'free' && hoursSinceCreation <= 72) {
         return res.status(403).json({
-          error: 'Acest IP are deja un cont activ în perioada free de 72 ore. Te rugăm să aștepți sau să folosești un abonament plătit.',
+          error: 'Acest IP are deja un cont activ în perioada free de 72 ore. Te rugăm să te autentifici cu contul existent.',
           code: 'IP_LIMIT_ACTIVE_FREE'
         });
       }
-
-      if (ipCheck.subscription_type === 'free' && hoursSinceCreation > 72) {
-        return res.status(403).json({
-          error: 'Perioada de testare gratuită a expirat pentru acest IP. Pentru a continua, te rugăm să achiziționezi un abonament.',
-          code: 'IP_LIMIT_EXPIRED_FREE'
-        });
-      }
-
-      // If they have a paid subscription, they can create another account
-      // (This is allowed as they're paying customers)
     }
 
     // Hash password
     const passwordHash = await hashPassword(password);
 
-    // Create user
+    // Create user (will be dormant if IP already used free trial)
     const user = await createUser(email.toLowerCase(), passwordHash, clientIp);
 
     // Add to Mailerlite newsletter
@@ -79,17 +69,24 @@ export default async function handler(req, res) {
     // Create session token
     const token = await createUserSession(user.id, user.email);
 
+    // Check if account was created as dormant
+    const warning = user.account_status === 'dormant'
+      ? 'Se pare că ai mai folosit perioada gratuită de pe acest dispozitiv. Upgrade pentru acces complet!'
+      : null;
+
     return res.status(201).json({
       success: true,
-      message: 'Cont creat cu succes! Ai 20 de mesaje gratuite în următoarele 72 de ore.',
+      message: warning || 'Cont creat cu succes! Ai 20 de mesaje gratuite în următoarele 72 de ore.',
       token,
+      warning,
       user: {
         id: user.id,
         email: user.email,
         subscriptionType: user.subscription_type,
         messagesUsed: user.messages_used,
         messagesLimit: user.messages_limit,
-        createdAt: user.created_at
+        createdAt: user.created_at,
+        accountStatus: user.account_status
       }
     });
   } catch (error) {

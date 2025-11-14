@@ -56,6 +56,21 @@ export default async function handler(req, res) {
         const limitCheck = await checkUserLimit(auth.userId);
 
         if (!limitCheck.allowed) {
+            // Special handling for dormant accounts
+            if (limitCheck.requiresUpgrade) {
+                return res.status(403).json({
+                    error: 'Ai folosit cele 20 mesaje gratuite. Upgrade pentru a continua!',
+                    code: 'ACCOUNT_DORMANT',
+                    upgradeRequired: true,
+                    user: {
+                        subscriptionType: limitCheck.user.subscription_type,
+                        messagesUsed: limitCheck.user.messages_used,
+                        messagesLimit: limitCheck.user.messages_limit
+                    }
+                });
+            }
+
+            // Other limit errors
             const errorMessages = {
                 'Free tier expired (72h)': 'Perioada ta gratuită de 72 ore a expirat. Pentru a continua, achiziționează un abonament.',
                 'Subscription expired': 'Abonamentul tău a expirat. Te rugăm să reînnoiești abonamentul.',

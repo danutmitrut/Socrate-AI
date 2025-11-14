@@ -48,13 +48,19 @@ function updateUserInfo(user) {
             ${user.messagesUsed}/${user.messagesLimit} mesaje
         </div>
 
-        ${user.subscriptionType === 'free' && !user.freeExpired ? `
+        ${user.accountStatus === 'dormant' ? `
+            <div style="font-size: 0.85rem; color: #fbbf24; margin-bottom: 1rem; line-height: 1.4;">
+                ⚠️ Cont dormant<br>Upgrade pentru acces complet!
+            </div>
+        ` : ''}
+
+        ${user.subscriptionType === 'free' && !user.freeExpired && user.accountStatus !== 'dormant' ? `
             <div style="font-size: 0.85rem; opacity: 0.9; margin-bottom: 1rem;">
                 ${user.hoursRemaining} ore rămase<br>din perioada free
             </div>
         ` : ''}
 
-        ${user.freeExpired || user.paidExpired ? `
+        ${(user.freeExpired || user.paidExpired) && user.accountStatus !== 'dormant' ? `
             <div style="font-size: 0.85rem; color: #fca5a5; margin-bottom: 1rem; line-height: 1.4;">
                 ⚠️ Perioada ${user.subscriptionType === 'free' ? 'gratuită' : 'de abonament'} a expirat
             </div>
@@ -67,12 +73,12 @@ function updateUserInfo(user) {
         ` : ''}
 
         <div style="display: flex; flex-direction: column; gap: 0.75rem; width: 100%;">
-            ${(user.subscriptionType === 'free' && user.messagesUsed >= user.messagesLimit) || user.freeExpired || user.paidExpired ? `
+            ${user.accountStatus === 'dormant' || (user.subscriptionType === 'free' && user.messagesUsed >= user.messagesLimit) || user.freeExpired || user.paidExpired ? `
                 <button onclick="upgradeSubscription()" style="background: #fbbf24; color: #000; padding: 0.75rem 1rem; border-radius: 0.5rem; font-weight: 600; font-size: 0.9rem; border: none; cursor: pointer; width: 100%;">
                     ${user.subscriptionType === 'free' ? 'Upgrade la Paid' : 'Reînnoiește'}
                 </button>
             ` : ''}
-            ${user.subscriptionType === 'free' && user.messagesUsed < user.messagesLimit && !user.freeExpired ? `
+            ${user.subscriptionType === 'free' && user.messagesUsed < user.messagesLimit && !user.freeExpired && user.accountStatus !== 'dormant' ? `
                 <button onclick="upgradeSubscription()" style="background: rgba(255,255,255,0.2); color: white; padding: 0.75rem 1rem; border-radius: 0.5rem; font-weight: 600; font-size: 0.9rem; border: 2px solid white; cursor: pointer; width: 100%;">
                     Upgrade la Paid
                 </button>
@@ -323,7 +329,7 @@ window.chatApp = function() {
                     const errorData = await response.json();
 
                     // Handle specific error codes
-                    if (errorData.code === 'LIMIT_EXCEEDED') {
+                    if (errorData.code === 'ACCOUNT_DORMANT' || errorData.code === 'LIMIT_EXCEEDED') {
                         this.messages.push({
                             id: Date.now() + '_limit',
                             role: 'assistant',
