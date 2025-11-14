@@ -42,63 +42,56 @@ async function checkAuth() {
 // Update user info in UI
 function updateUserInfo(user) {
     const userInfoHtml = `
-        <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 1rem; background: rgba(255,255,255,0.1); border-radius: 0.5rem; margin-bottom: 0.5rem;">
-            <div style="flex: 1;">
-                <div style="font-size: 0.85rem; opacity: 0.9;">${user.email}</div>
-                <div style="font-size: 0.8rem; font-weight: 600; margin-top: 0.25rem;">
-                    ${user.messagesUsed}/${user.messagesLimit} mesaje folosite
-                </div>
-                ${user.subscriptionType === 'free' && !user.freeExpired ? `
-                    <div style="font-size: 0.75rem; opacity: 0.8; margin-top: 0.25rem;">
-                        ${user.hoursRemaining} ore rămase din perioada free
-                    </div>
-                ` : ''}
-                ${user.freeExpired || user.paidExpired ? `
-                    <div style="font-size: 0.75rem; color: #fca5a5; margin-top: 0.25rem;">
-                        ⚠️ Perioada ${user.subscriptionType === 'free' ? 'gratuită' : 'de abonament'} a expirat
-                    </div>
-                ` : ''}
-                ${user.subscriptionType === 'paid' && !user.paidExpired && user.subscriptionCancelAt ? `
-                    <div style="font-size: 0.75rem; color: #fbbf24; margin-top: 0.25rem;">
-                        ⏱️ Abonament anulat - activ până pe ${new Date(user.subscriptionCancelAt).toLocaleDateString('ro-RO', { day: '2-digit', month: 'long', year: 'numeric' })}
-                    </div>
-                ` : ''}
+        <div style="font-size: 0.9rem; font-weight: 600; margin-bottom: 0.5rem;">${user.email}</div>
+
+        <div style="font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem;">
+            ${user.messagesUsed}/${user.messagesLimit} mesaje
+        </div>
+
+        ${user.subscriptionType === 'free' && !user.freeExpired ? `
+            <div style="font-size: 0.85rem; opacity: 0.9; margin-bottom: 1rem;">
+                ${user.hoursRemaining} ore rămase<br>din perioada free
             </div>
-            <div style="display: flex; gap: 0.5rem;">
-                ${(user.subscriptionType === 'free' && user.messagesUsed >= user.messagesLimit) || user.freeExpired || user.paidExpired ? `
-                    <button onclick="upgradeSubscription()" style="background: #fbbf24; color: #000; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 600; font-size: 0.85rem; border: none; cursor: pointer;">
-                        ${user.subscriptionType === 'free' ? 'Upgrade la Paid' : 'Reînnoiește'}
-                    </button>
-                ` : ''}
-                ${user.subscriptionType === 'free' && user.messagesUsed < user.messagesLimit && !user.freeExpired ? `
-                    <button onclick="upgradeSubscription()" style="background: transparent; color: white; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 600; font-size: 0.85rem; border: 2px solid white; cursor: pointer;">
-                        Upgrade
-                    </button>
-                ` : ''}
-                ${user.subscriptionType === 'paid' && !user.paidExpired && !user.subscriptionCancelAt ? `
-                    <button onclick="cancelSubscription()" style="background: transparent; color: #fca5a5; padding: 0.5rem 1rem; border-radius: 0.5rem; font-size: 0.85rem; border: 1px solid #fca5a5; cursor: pointer; opacity: 0.9;">
-                        Anulează Abonament
-                    </button>
-                ` : ''}
-                <button onclick="logout()" style="background: transparent; color: white; padding: 0.5rem 1rem; border-radius: 0.5rem; font-size: 0.85rem; border: none; cursor: pointer; opacity: 0.8;">
-                    Logout
+        ` : ''}
+
+        ${user.freeExpired || user.paidExpired ? `
+            <div style="font-size: 0.85rem; color: #fca5a5; margin-bottom: 1rem; line-height: 1.4;">
+                ⚠️ Perioada ${user.subscriptionType === 'free' ? 'gratuită' : 'de abonament'} a expirat
+            </div>
+        ` : ''}
+
+        ${user.subscriptionType === 'paid' && !user.paidExpired && user.subscriptionCancelAt ? `
+            <div style="font-size: 0.85rem; color: #fbbf24; margin-bottom: 1rem; line-height: 1.4;">
+                ⏱️ Abonament anulat<br>Activ până pe ${new Date(user.subscriptionCancelAt).toLocaleDateString('ro-RO', { day: '2-digit', month: 'long', year: 'numeric' })}
+            </div>
+        ` : ''}
+
+        <div style="display: flex; flex-direction: column; gap: 0.75rem; width: 100%;">
+            ${(user.subscriptionType === 'free' && user.messagesUsed >= user.messagesLimit) || user.freeExpired || user.paidExpired ? `
+                <button onclick="upgradeSubscription()" style="background: #fbbf24; color: #000; padding: 0.75rem 1rem; border-radius: 0.5rem; font-weight: 600; font-size: 0.9rem; border: none; cursor: pointer; width: 100%;">
+                    ${user.subscriptionType === 'free' ? 'Upgrade la Paid' : 'Reînnoiește'}
                 </button>
-            </div>
+            ` : ''}
+            ${user.subscriptionType === 'free' && user.messagesUsed < user.messagesLimit && !user.freeExpired ? `
+                <button onclick="upgradeSubscription()" style="background: rgba(255,255,255,0.2); color: white; padding: 0.75rem 1rem; border-radius: 0.5rem; font-weight: 600; font-size: 0.9rem; border: 2px solid white; cursor: pointer; width: 100%;">
+                    Upgrade la Paid
+                </button>
+            ` : ''}
+            ${user.subscriptionType === 'paid' && !user.paidExpired && !user.subscriptionCancelAt ? `
+                <button onclick="cancelSubscription()" style="background: transparent; color: #fca5a5; padding: 0.75rem 1rem; border-radius: 0.5rem; font-size: 0.9rem; border: 1px solid #fca5a5; cursor: pointer; width: 100%;">
+                    Anulează Abonament
+                </button>
+            ` : ''}
+            <button onclick="logout()" style="background: rgba(255,255,255,0.15); color: white; padding: 0.75rem 1rem; border-radius: 0.5rem; font-size: 0.9rem; border: 1px solid rgba(255,255,255,0.3); cursor: pointer; width: 100%;">
+                Logout
+            </button>
         </div>
     `;
 
-    // Insert user info into header
-    const header = document.querySelector('header .max-w-4xl');
-    if (header) {
-        const existingUserInfo = header.querySelector('.user-info-container');
-        if (existingUserInfo) {
-            existingUserInfo.remove();
-        }
-
-        const userInfoDiv = document.createElement('div');
-        userInfoDiv.className = 'user-info-container';
-        userInfoDiv.innerHTML = userInfoHtml;
-        header.appendChild(userInfoDiv);
+    // Insert user info into the right sidebar
+    const userInfoBox = document.querySelector('#user-info-box');
+    if (userInfoBox) {
+        userInfoBox.innerHTML = userInfoHtml;
     }
 }
 
