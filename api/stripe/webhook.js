@@ -1,5 +1,5 @@
 import Stripe from 'stripe';
-import { updateUserSubscription, isStripeEventProcessed, recordStripeEvent } from '../../lib/db.js';
+import { updateUserSubscription, isStripeEventProcessed, recordStripeEvent, clearSubscriptionCancelAt } from '../../lib/db.js';
 import { updateMailerliteSubscriber } from '../../lib/mailerlite.js';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
@@ -124,6 +124,9 @@ export default async function handler(req, res) {
           subscriptionEndsAt: subscriptionEndDate
         });
 
+        // Clear cancel_at if subscription was renewed (customer re-subscribed)
+        await clearSubscriptionCancelAt(userId);
+
         // Record event as processed
         await recordStripeEvent(event.id, event.type, userId, {
           subscription_id: subscription.id,
@@ -138,6 +141,9 @@ export default async function handler(req, res) {
       case 'customer.subscription.deleted': {
         const subscription = event.data.object;
         const userId = parseInt(subscription.metadata.userId);
+
+        // Clear cancel_at when subscription is actually deleted
+        await clearSubscriptionCancelAt(userId);
 
         // Record event as processed
         await recordStripeEvent(event.id, event.type, userId, {

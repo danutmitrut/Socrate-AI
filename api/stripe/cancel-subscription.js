@@ -1,6 +1,6 @@
 import Stripe from 'stripe';
 import { verifyToken } from '../../lib/auth.js';
-import { getUserById } from '../../lib/db.js';
+import { getUserById, setSubscriptionCancelAt } from '../../lib/db.js';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -48,6 +48,10 @@ export default async function handler(req, res) {
       // Fallback: 30 days from now
       endsAt = Date.now() + (30 * 24 * 60 * 60 * 1000);
     }
+
+    // Save cancel_at date in database
+    const cancelAtTimestamp = new Date(endsAt).toISOString();
+    await setSubscriptionCancelAt(userId, cancelAtTimestamp);
 
     return res.status(200).json({
       success: true,

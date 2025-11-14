@@ -58,6 +58,11 @@ function updateUserInfo(user) {
                         ⚠️ Perioada ${user.subscriptionType === 'free' ? 'gratuită' : 'de abonament'} a expirat
                     </div>
                 ` : ''}
+                ${user.subscriptionType === 'paid' && !user.paidExpired && user.subscriptionCancelAt ? `
+                    <div style="font-size: 0.75rem; color: #fbbf24; margin-top: 0.25rem;">
+                        ⏱️ Abonament anulat - activ până pe ${new Date(user.subscriptionCancelAt).toLocaleDateString('ro-RO', { day: '2-digit', month: 'long', year: 'numeric' })}
+                    </div>
+                ` : ''}
             </div>
             <div style="display: flex; gap: 0.5rem;">
                 ${(user.subscriptionType === 'free' && user.messagesUsed >= user.messagesLimit) || user.freeExpired || user.paidExpired ? `
@@ -70,7 +75,7 @@ function updateUserInfo(user) {
                         Upgrade
                     </button>
                 ` : ''}
-                ${user.subscriptionType === 'paid' && !user.paidExpired ? `
+                ${user.subscriptionType === 'paid' && !user.paidExpired && !user.subscriptionCancelAt ? `
                     <button onclick="cancelSubscription()" style="background: transparent; color: #fca5a5; padding: 0.5rem 1rem; border-radius: 0.5rem; font-size: 0.85rem; border: 1px solid #fca5a5; cursor: pointer; opacity: 0.9;">
                         Anulează Abonament
                     </button>

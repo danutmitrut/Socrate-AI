@@ -48,6 +48,7 @@ export default async function handler(req, res) {
         messagesLimit: user.messages_limit,
         createdAt: user.created_at,
         subscriptionEndsAt: user.subscription_ends_at,
+        subscriptionCancelAt: user.subscription_cancel_at,
         freeExpired,
         paidExpired,
         hoursRemaining: user.subscription_type === 'free' ? Math.max(0, 72 - hoursSinceCreation).toFixed(1) : null
