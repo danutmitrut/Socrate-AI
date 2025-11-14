@@ -20,12 +20,14 @@
 - ✅ Actualizat toate environment variables în Vercel cu Live keys
 - ✅ Deployment reușit cu Live Mode
 
-**Credentials Live (securizate):**
+**Credentials Live:**
 ```
-STRIPE_PRICE_ID = price_1STMS9EamLjkX3frFwPNQpwy
-STRIPE_PUBLISHABLE_KEY = pk_live_51OEU3p...
-STRIPE_SECRET_KEY = sk_live_51OEU3p...
-STRIPE_WEBHOOK_SECRET = whsec_1H3kLFsBukITJctIJrl3I5JI98QwSFsj
+⚠️ ATENȚIE: Credentials-urile Live sunt securizate în Vercel Environment Variables
+Nu sunt incluse în acest fișier din motive de securitate.
+
+Pentru a le vedea:
+- Vercel Dashboard → socrate-ai → Settings → Environment Variables
+- Stripe Dashboard → Developers → API keys / Webhooks
 ```
 
 ---
