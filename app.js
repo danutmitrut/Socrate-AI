@@ -70,6 +70,11 @@ function updateUserInfo(user) {
                         Upgrade
                     </button>
                 ` : ''}
+                ${user.subscriptionType === 'paid' && !user.paidExpired ? `
+                    <button onclick="cancelSubscription()" style="background: transparent; color: #fca5a5; padding: 0.5rem 1rem; border-radius: 0.5rem; font-size: 0.85rem; border: 1px solid #fca5a5; cursor: pointer; opacity: 0.9;">
+                        Anulează Abonament
+                    </button>
+                ` : ''}
                 <button onclick="logout()" style="background: transparent; color: white; padding: 0.5rem 1rem; border-radius: 0.5rem; font-size: 0.85rem; border: none; cursor: pointer; opacity: 0.8;">
                     Logout
                 </button>
@@ -120,6 +125,36 @@ window.upgradeSubscription = async function() {
     } catch (error) {
         console.error('Upgrade error:', error);
         alert('Eroare la crearea sesiunii de plată. Te rugăm să încerci din nou.');
+    }
+};
+
+// Cancel subscription
+window.cancelSubscription = async function() {
+    if (!confirm('Ești sigur că vrei să anulezi abonamentul? Vei păstra accesul până la sfârșitul perioadei curente de facturare.')) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_URL}/api/stripe/cancel-subscription`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${authToken}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to cancel subscription');
+        }
+
+        const data = await response.json();
+        alert('Abonamentul a fost anulat cu succes. Vei păstra accesul până la ' + new Date(data.endsAt).toLocaleDateString('ro-RO'));
+
+        // Refresh user data
+        await checkAuth();
+    } catch (error) {
+        console.error('Cancel error:', error);
+        alert('Eroare la anularea abonamentului. Te rugăm să încerci din nou.');
     }
 };
 
