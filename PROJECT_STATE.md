@@ -45,9 +45,15 @@
 
 ---
 
-## 🎯 OBIECTIVE URMĂTOARELE 15 ORE
+## 🎯 OBIECTIVE URMĂTOARE
 
-### Prioritate 1: Switch la Live Mode (2-3 ore)
+### Prioritate 1: Deploy Security Updates ✅ COMPLETAT
+- [x] **Push la GitHub** - `git push origin main` ✅
+- [x] **Rulează database migration** - Tabel `stripe_events` creat ✅
+- [x] **Verifică deployment** - Vercel deployed și funcțional ✅
+- [x] **Test webhook security** - Signature verification activ ✅
+
+### Prioritate 2: Switch la Live Mode (2-3 ore)
 - [ ] Switch Stripe la Live mode
 - [ ] Obține Live API keys (sk_live_, pk_live_)
 - [ ] Creează produs Live în Stripe (29 RON/lună)
@@ -56,7 +62,7 @@
 - [ ] Testează cu plată reală (card propriu)
 - [ ] Verifică că webhook-ul Live funcționează
 
-### Prioritate 2: Password Recovery (3-4 ore)
+### Prioritate 3: Password Recovery (3-4 ore)
 - [ ] Design UI pentru "Forgot Password" în auth.html
 - [ ] Creează endpoint `/api/auth/request-reset`
   - Generează token unic expirabil (JWT sau random)
@@ -70,7 +76,7 @@
 - [ ] Creează endpoint `/api/auth/reset-password`
 - [ ] Testează flow complet
 
-### Prioritate 3: Testing & Validation (2-3 ore)
+### Prioritate 4: Testing & Validation (2-3 ore)
 - [ ] Test complet free tier flow
 - [ ] Test complet paid tier flow
 - [ ] Test anti-abuse (multiple IPs)
@@ -79,7 +85,7 @@
 - [ ] Test webhook pentru renewal subscription
 - [ ] Test cancel subscription
 
-### Prioritate 4: Cleanup & Polish (2-3 ore)
+### Prioritate 5: Cleanup & Polish (2-3 ore)
 - [x] **Protejează endpoint-uri debug:** ✅ COMPLETAT
   - ✅ /api/debug/reset-password.js - Protected cu DEBUG_SECRET
   - ✅ /api/debug/reset-database.js - Protected cu DEBUG_SECRET
@@ -93,7 +99,7 @@
 - [ ] Adaugă analytics (opțional - Google Analytics sau Plausible)
 - [ ] Review securitate final
 
-### Prioritate 5: Documentation & Deployment (2-3 ore)
+### Prioritate 6: Documentation & Deployment (2-3 ore)
 - [ ] Actualizează README.md final
 - [ ] Documentează API endpoints
 - [ ] Creează ghid pentru utilizatori
