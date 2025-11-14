@@ -38,10 +38,21 @@ export default async function handler(req, res) {
       }
     );
 
+    // Calculate end date (fallback to 30 days if not available)
+    let endsAt;
+    if (subscription.current_period_end && subscription.current_period_end > 0) {
+      endsAt = subscription.current_period_end * 1000; // Convert to milliseconds
+    } else if (subscription.cancel_at && subscription.cancel_at > 0) {
+      endsAt = subscription.cancel_at * 1000;
+    } else {
+      // Fallback: 30 days from now
+      endsAt = Date.now() + (30 * 24 * 60 * 60 * 1000);
+    }
+
     return res.status(200).json({
       success: true,
       message: 'Subscription will be canceled at period end',
-      endsAt: subscription.current_period_end * 1000 // Convert to milliseconds
+      endsAt: endsAt
     });
 
   } catch (error) {
