@@ -37,12 +37,21 @@ export default async function handler(req, res) {
       });
     }
 
-    // Optional: verifică un secret pentru securitate suplimentară
-    // Poți seta DEBUG_SECRET în Vercel Environment Variables
-    if (process.env.DEBUG_SECRET && debugSecret !== process.env.DEBUG_SECRET) {
+    // SECURITY: Require DEBUG_SECRET (no longer optional!)
+    const debugSecretFromHeader = req.headers['x-debug-secret'];
+    const actualDebugSecret = debugSecret || debugSecretFromHeader;
+
+    if (!process.env.DEBUG_SECRET) {
+      return res.status(403).json({
+        error: 'DEBUG_SECRET not configured',
+        message: 'Set DEBUG_SECRET in Vercel environment variables to use this endpoint'
+      });
+    }
+
+    if (actualDebugSecret !== process.env.DEBUG_SECRET) {
       return res.status(401).json({
-        error: 'Debug secret invalid',
-        hint: 'Setează DEBUG_SECRET în Vercel sau trimite debugSecret corect'
+        error: 'Unauthorized',
+        message: 'Invalid or missing DEBUG_SECRET. Send via x-debug-secret header or debugSecret in body.'
       });
     }
 

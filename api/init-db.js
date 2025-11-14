@@ -12,10 +12,21 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  // Optional: Add a secret token check for security
+  // SECURITY: Require DB_INIT_SECRET to prevent unauthorized database initialization
   const authToken = req.headers['x-init-token'];
-  if (process.env.DB_INIT_SECRET && authToken !== process.env.DB_INIT_SECRET) {
-    return res.status(403).json({ error: 'Unauthorized' });
+
+  if (!process.env.DB_INIT_SECRET) {
+    return res.status(403).json({
+      error: 'DB_INIT_SECRET not configured',
+      message: 'Set DB_INIT_SECRET in Vercel environment variables to use this endpoint'
+    });
+  }
+
+  if (authToken !== process.env.DB_INIT_SECRET) {
+    return res.status(401).json({
+      error: 'Unauthorized',
+      message: 'Invalid or missing DB_INIT_SECRET. Send via x-init-token header.'
+    });
   }
 
   try {
@@ -28,7 +39,8 @@ export default async function handler(req, res) {
         'users',
         'ip_tracking',
         'sessions',
-        'usage_logs'
+        'usage_logs',
+        'stripe_events'
       ]
     });
   } catch (error) {

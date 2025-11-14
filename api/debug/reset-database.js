@@ -8,6 +8,23 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  // SECURITY: Require DEBUG_SECRET to prevent unauthorized database wipes
+  const debugSecret = req.headers['x-debug-secret'] || req.body?.debugSecret;
+
+  if (!process.env.DEBUG_SECRET) {
+    return res.status(403).json({
+      error: 'DEBUG_SECRET not configured',
+      message: 'Set DEBUG_SECRET in Vercel environment variables to use this endpoint'
+    });
+  }
+
+  if (debugSecret !== process.env.DEBUG_SECRET) {
+    return res.status(401).json({
+      error: 'Unauthorized',
+      message: 'Invalid or missing DEBUG_SECRET. Send via x-debug-secret header or debugSecret in body.'
+    });
+  }
+
   try {
     // WARNING: ȘTERGE TOATE TABELELE!
     console.log('⚠️ ȘTERGERE TABELE - DROP ALL TABLES');

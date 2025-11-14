@@ -1,5 +1,5 @@
 import Stripe from 'stripe';
-import { updateUserSubscription } from '../../lib/db.js';
+import { updateUserSubscription, isStripeEventProcessed, recordStripeEvent } from '../../lib/db.js';
 import { updateMailerliteSubscriber } from '../../lib/mailerlite.js';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
@@ -46,6 +46,13 @@ export default async function handler(req, res) {
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
+  // Check idempotency - prevent processing same event twice
+  const alreadyProcessed = await isStripeEventProcessed(event.id);
+  if (alreadyProcessed) {
+    console.log(`Event ${event.id} already processed - skipping`);
+    return res.status(200).json({ received: true, message: 'Event already processed' });
+  }
+
   // Handle the event
   try {
     switch (event.type) {
@@ -74,6 +81,12 @@ export default async function handler(req, res) {
             subscription_type: 'paid',
             subscription_date: new Date().toISOString()
           }).catch(err => console.error('Mailerlite update error:', err));
+
+          // Record event as processed
+          await recordStripeEvent(event.id, event.type, userId, {
+            subscription_id: subscription.id,
+            customer_id: session.customer
+          });
 
           console.log(`Subscription created for user ${userId}`);
         }
@@ -111,6 +124,13 @@ export default async function handler(req, res) {
           subscriptionEndsAt: subscriptionEndDate
         });
 
+        // Record event as processed
+        await recordStripeEvent(event.id, event.type, userId, {
+          subscription_id: subscription.id,
+          customer_id: invoice.customer,
+          amount_paid: invoice.amount_paid
+        });
+
         console.log(`Subscription renewed for user ${userId}`);
         break;
       }
@@ -118,6 +138,11 @@ export default async function handler(req, res) {
       case 'customer.subscription.deleted': {
         const subscription = event.data.object;
         const userId = parseInt(subscription.metadata.userId);
+
+        // Record event as processed
+        await recordStripeEvent(event.id, event.type, userId, {
+          subscription_id: subscription.id
+        });
 
         // Mark subscription as expired (handled by checkUserLimit function)
         console.log(`Subscription canceled for user ${userId}`);

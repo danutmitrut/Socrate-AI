@@ -20,10 +20,14 @@
 ### 🔧 Setup Tehnic Realizat
 - [x] vercel.json - Configurat pentru routing
 - [x] Environment variables - Toate configurate (STRIPE, POSTGRES, JWT, OpenAI)
-- [x] Database schema - Tabele create (users, ip_tracking, sessions, usage_logs)
+- [x] Database schema - Tabele create (users, ip_tracking, sessions, usage_logs, stripe_events)
 - [x] Stripe keys - Test mode configurat complet
 - [x] STRIPE_SETUP.md - Ghid pas-cu-pas complet
 - [x] Debug endpoints - Pentru testing rapid
+- [x] **SECURITY.md** - Documentație securitate completă
+- [x] **Debug endpoints protejate** - Toate necesită DEBUG_SECRET/DB_INIT_SECRET
+- [x] **Stripe webhook signature verification** - VERIFIED și funcțional ✅
+- [x] **Stripe idempotency protection** - Previne procesare dublă ✅
 
 ### 🐛 Probleme Rezolvate
 - [x] Fix 404 deployment error - vercel.json simplificat
@@ -31,6 +35,7 @@
 - [x] Fix Stripe webhook timestamp error - Validare adăugată
 - [x] Fix invoice webhook undefined subscription - Validare adăugată
 - [x] Manual upgrade endpoint - Pentru testare rapidă
+- [x] **Stripe webhook security hardening** - Signature verification + idempotency ✅
 
 ### 📊 Status Curent
 **URL Live:** https://socrate-ai-8teu.vercel.app
@@ -75,11 +80,14 @@
 - [ ] Test cancel subscription
 
 ### Prioritate 4: Cleanup & Polish (2-3 ore)
-- [ ] Șterge/protejează endpoint-uri debug:
-  - /api/debug/reset-password.js
-  - /api/debug/reset-database.js
-  - /api/debug/list-users.js
-  - /api/debug/manual-upgrade.js
+- [x] **Protejează endpoint-uri debug:** ✅ COMPLETAT
+  - ✅ /api/debug/reset-password.js - Protected cu DEBUG_SECRET
+  - ✅ /api/debug/reset-database.js - Protected cu DEBUG_SECRET
+  - ✅ /api/debug/list-users.js - Protected cu DEBUG_SECRET
+  - ✅ /api/debug/manual-upgrade.js - Protected cu DEBUG_SECRET
+  - ✅ /api/init-db.js - Protected cu DB_INIT_SECRET
+  - ✅ SECURITY.md creat cu documentație completă
+- [ ] **Setează DEBUG_SECRET și DB_INIT_SECRET în Vercel** (IMPORTANT!)
 - [ ] Adaugă rate limiting suplimentar
 - [ ] Îmbunătățește mesaje de eroare pentru utilizatori
 - [ ] Adaugă analytics (opțional - Google Analytics sau Plausible)
@@ -99,6 +107,7 @@
 ### Fișiere Cheie
 - **[STRIPE_SETUP.md](STRIPE_SETUP.md)** - Ghid complet Stripe setup
 - **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)** - Ghid deployment Vercel
+- **[SECURITY.md](SECURITY.md)** - Securitate și protecție debug endpoints ⭐ NOU!
 - **[NEXT_STEPS.md](NEXT_STEPS.md)** - Următorii pași și idei
 
 ### Structură Proiect
@@ -129,6 +138,8 @@ STRIPE_PUBLISHABLE_KEY - Stripe publishable key
 STRIPE_PRICE_ID - ID produs Stripe
 STRIPE_WEBHOOK_SECRET - Webhook signing secret
 APP_URL - URL aplicație (ex: https://socrate-ai.vercel.app)
+DEBUG_SECRET - ⭐ NOU! Secret pentru protecție debug endpoints (OBLIGATORIU!)
+DB_INIT_SECRET - ⭐ NOU! Secret pentru protecție init-db endpoint (OBLIGATORIU!)
 MAILERLITE_API_KEY - (opțional) Mailerlite API key
 ```
 
