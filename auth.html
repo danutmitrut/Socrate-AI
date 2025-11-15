@@ -184,7 +184,7 @@
         <div id="loginForm">
             <div class="auth-header">
                 <h1>SOCRATE AI</h1>
-                <p>Bine ai revenit! Autentifică-te pentru a continua.</p>
+                <p>Bine ai venit! Autentifică-te pentru a continua.</p>
             </div>
 
             <div id="errorMessage" class="error-message" style="display: none;"></div>
@@ -207,6 +207,34 @@
             <div class="toggle-form">
                 <a href="#" id="showForgotPassword" style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem;">Ai uitat parola?</a>
                 Nu ai cont? <a href="#" id="showRegister">Înregistrează-te gratuit</a>
+            </div>
+        </div>
+
+        <!-- Forgot Password Form -->
+        <div id="forgotPasswordForm" style="display: none;">
+            <div class="auth-header">
+                <h1>SOCRATE AI</h1>
+                <p>Recuperează-ți parola</p>
+            </div>
+
+            <div id="forgotErrorMessage" class="error-message" style="display: none;"></div>
+            <div id="forgotSuccessMessage" class="success-message" style="display: none;"></div>
+
+            <form id="forgotPasswordFormElement">
+                <div class="form-group">
+                    <label for="forgotEmail">Email</label>
+                    <input type="email" id="forgotEmail" required>
+                    <p style="font-size: 0.85rem; color: var(--brand-text-dark); margin-top: 0.5rem;">
+                        Îți vom trimite un link de resetare a parolei.
+                    </p>
+                </div>
+                <button type="submit" class="btn btn-primary" id="forgotBtn">
+                    Trimite Link de Resetare
+                </button>
+            </form>
+
+            <div class="toggle-form">
+                Ți-ai amintit parola? <a href="#" id="backToLogin">Autentifică-te</a>
             </div>
         </div>
 
@@ -261,12 +289,29 @@
             e.preventDefault();
             document.getElementById('loginForm').style.display = 'none';
             document.getElementById('registerForm').style.display = 'block';
+            document.getElementById('forgotPasswordForm').style.display = 'none';
             clearMessages();
         });
 
         document.getElementById('showLogin').addEventListener('click', (e) => {
             e.preventDefault();
             document.getElementById('registerForm').style.display = 'none';
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('forgotPasswordForm').style.display = 'none';
+            clearMessages();
+        });
+
+        document.getElementById('showForgotPassword').addEventListener('click', (e) => {
+            e.preventDefault();
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'none';
+            document.getElementById('forgotPasswordForm').style.display = 'block';
+            clearMessages();
+        });
+
+        document.getElementById('backToLogin').addEventListener('click', (e) => {
+            e.preventDefault();
+            document.getElementById('forgotPasswordForm').style.display = 'none';
             document.getElementById('loginForm').style.display = 'block';
             clearMessages();
         });
@@ -309,6 +354,40 @@
                 showError(error.message);
                 btn.disabled = false;
                 btn.textContent = 'Autentificare';
+            }
+        });
+
+        // Forgot Password handler
+        document.getElementById('forgotPasswordFormElement').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('forgotBtn');
+            btn.disabled = true;
+            btn.textContent = 'Se trimite...';
+            clearMessages('forgot');
+
+            const email = document.getElementById('forgotEmail').value;
+
+            try {
+                const response = await fetch(`${API_URL}/api/auth/forgot-password`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Eroare la trimiterea email-ului');
+                }
+
+                showSuccess('Link de resetare trimis! Verifică-ți email-ul.', 'forgot');
+                document.getElementById('forgotEmail').value = '';
+
+            } catch (error) {
+                showError(error.message, 'forgot');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Trimite Link de Resetare';
             }
         });
 
@@ -359,23 +438,39 @@
         });
 
         function showError(message, form = 'login') {
-            const errorEl = form === 'login'
-                ? document.getElementById('errorMessage')
-                : document.getElementById('registerErrorMessage');
-            errorEl.textContent = message;
-            errorEl.style.display = 'block';
+            let errorEl;
+            if (form === 'login') {
+                errorEl = document.getElementById('errorMessage');
+            } else if (form === 'register') {
+                errorEl = document.getElementById('registerErrorMessage');
+            } else if (form === 'forgot') {
+                errorEl = document.getElementById('forgotErrorMessage');
+            }
+            if (errorEl) {
+                errorEl.textContent = message;
+                errorEl.style.display = 'block';
+            }
         }
 
-        function showSuccess(message) {
-            const successEl = document.getElementById('successMessage');
-            successEl.textContent = message;
-            successEl.style.display = 'block';
+        function showSuccess(message, form = 'login') {
+            let successEl;
+            if (form === 'login') {
+                successEl = document.getElementById('successMessage');
+            } else if (form === 'forgot') {
+                successEl = document.getElementById('forgotSuccessMessage');
+            }
+            if (successEl) {
+                successEl.textContent = message;
+                successEl.style.display = 'block';
+            }
         }
 
         function clearMessages(form = 'login') {
             document.getElementById('errorMessage').style.display = 'none';
             document.getElementById('successMessage').style.display = 'none';
             document.getElementById('registerErrorMessage').style.display = 'none';
+            document.getElementById('forgotErrorMessage').style.display = 'none';
+            document.getElementById('forgotSuccessMessage').style.display = 'none';
         }
 
         // Check if already logged in
