@@ -382,13 +382,14 @@
                     throw new Error(data.error || 'Eroare la trimiterea email-ului');
                 }
 
-                // Show success message with link (for testing)
-                let message = data.message;
+                // Show success message
+                showSuccess(data.message, 'forgot');
+
+                // If resetLink is provided (development mode), show it
                 if (data.resetLink) {
-                    message += `\n\nLink de resetare (pentru testing):\n${data.resetLink}`;
-                    console.log('Reset Link:', data.resetLink);
+                    console.log('Reset Link (dev mode):', data.resetLink);
                 }
-                showSuccess(message, 'forgot');
+
                 document.getElementById('forgotEmail').value = '';
 
             } catch (error) {

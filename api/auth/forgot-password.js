@@ -1,5 +1,6 @@
 import { sql } from '@vercel/postgres';
 import crypto from 'crypto';
+import { sendPasswordResetEmail } from '../../lib/mailersend.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -50,14 +51,24 @@ export default async function handler(req, res) {
     console.log('Password Reset Link:', resetLink);
     console.log('Email:', email);
 
-    // TODO: Send email with reset link via Mailersend
-    // For now, we just log it and show it in console
+    // Send password reset email via Mailersend
+    const emailResult = await sendPasswordResetEmail(email, resetLink);
+
+    if (!emailResult.success) {
+      console.error('Failed to send reset email:', emailResult.error);
+      // Still return success to user (don't reveal if email exists)
+      // But log the resetLink for manual recovery if needed
+      return res.status(200).json({
+        success: true,
+        message: 'Dacă email-ul există în sistem, vei primi un link de resetare.',
+        // Show link in development mode if email failed
+        resetLink: process.env.NODE_ENV === 'development' ? resetLink : undefined
+      });
+    }
 
     return res.status(200).json({
       success: true,
-      message: 'Link de resetare trimis! Verifică consola serverului pentru link.',
-      // In development, show the link directly for testing
-      resetLink: resetLink
+      message: 'Email trimis! Verifică-ți inbox-ul pentru link-ul de resetare.'
     });
 
   } catch (error) {
