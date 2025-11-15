@@ -128,6 +128,8 @@
             border-radius: 0.5rem;
             margin-bottom: 1rem;
             font-size: 0.9rem;
+            white-space: pre-wrap;
+            word-break: break-all;
         }
 
         .toggle-form {
@@ -380,7 +382,13 @@
                     throw new Error(data.error || 'Eroare la trimiterea email-ului');
                 }
 
-                showSuccess('Link de resetare trimis! Verifică-ți email-ul.', 'forgot');
+                // Show success message with link (for testing)
+                let message = data.message;
+                if (data.resetLink) {
+                    message += `\n\nLink de resetare (pentru testing):\n${data.resetLink}`;
+                    console.log('Reset Link:', data.resetLink);
+                }
+                showSuccess(message, 'forgot');
                 document.getElementById('forgotEmail').value = '';
 
             } catch (error) {

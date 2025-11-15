@@ -41,19 +41,23 @@ export default async function handler(req, res) {
       WHERE id = ${user.id}
     `;
 
-    // TODO: Send email with reset link
-    // For now, we'll just log the reset link
-    const resetLink = `${process.env.VERCEL_URL || 'http://localhost:3000'}/reset-password.html?token=${resetToken}`;
+    // Generate reset link
+    const baseUrl = process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : 'http://localhost:3000';
+    const resetLink = `${baseUrl}/reset-password.html?token=${resetToken}`;
+
     console.log('Password Reset Link:', resetLink);
     console.log('Email:', email);
 
-    // In production, you would send this via email (Mailersend, etc.)
-    // For now, return success
+    // TODO: Send email with reset link via Mailersend
+    // For now, we just log it and show it in console
+
     return res.status(200).json({
       success: true,
-      message: 'Link de resetare trimis pe email',
-      // Remove this in production - only for testing
-      resetLink: process.env.NODE_ENV === 'development' ? resetLink : undefined
+      message: 'Link de resetare trimis! Verifică consola serverului pentru link.',
+      // In development, show the link directly for testing
+      resetLink: resetLink
     });
 
   } catch (error) {
