@@ -2,7 +2,7 @@ import Stripe from 'stripe';
 import { sql } from '@vercel/postgres';
 import { updateUserSubscription, isStripeEventProcessed, recordStripeEvent, clearSubscriptionCancelAt, setAccountActive, setAccountDormant } from '../../lib/db.js';
 import { updateMailerliteSubscriber } from '../../lib/mailerlite.js';
-import { sendSubscriptionEmail } from '../../lib/mailersend.js';
+import { sendSubscriptionEmail, sendSubscriptionCanceledEmail, sendSubscriptionExpiredEmail } from '../../lib/mailersend.js';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -158,6 +158,38 @@ export default async function handler(req, res) {
         break;
       }
 
+      case 'customer.subscription.updated': {
+        const subscription = event.data.object;
+        const userId = parseInt(subscription.metadata.userId);
+
+        // Check if subscription was canceled (cancel_at_period_end changed to true)
+        if (subscription.cancel_at_period_end && event.data.previous_attributes && event.data.previous_attributes.cancel_at_period_end === false) {
+          const endDate = new Date(subscription.current_period_end * 1000);
+
+          // Send Cancellation Email
+          const customer = await stripe.customers.retrieve(subscription.customer);
+          await sendSubscriptionCanceledEmail(customer.email, endDate).catch(err => {
+            console.error('Cancellation email error (non-blocking):', err);
+          });
+
+          console.log(`Subscription canceled for user ${userId}, access until ${endDate}`);
+        }
+
+        // We still want to update the DB with the new status
+        const subscriptionEndDate = subscription.current_period_end
+          ? new Date(subscription.current_period_end * 1000)
+          : null;
+
+        await updateUserSubscription(userId, {
+          stripeCustomerId: subscription.customer,
+          stripeSubscriptionId: subscription.id,
+          subscriptionEndsAt: subscriptionEndDate,
+          cancelAtPeriodEnd: subscription.cancel_at_period_end
+        });
+
+        break;
+      }
+
       case 'customer.subscription.deleted': {
         const subscription = event.data.object;
         const userId = parseInt(subscription.metadata.userId);
@@ -175,6 +207,18 @@ export default async function handler(req, res) {
             subscription_cancel_at = NULL
           WHERE id = ${userId}
         `;
+
+        // Send Expiration Email
+        // We need to fetch customer email. Subscription object might not have it directly if expanded, 
+        // but usually we need to fetch customer.
+        try {
+          const customer = await stripe.customers.retrieve(subscription.customer);
+          await sendSubscriptionExpiredEmail(customer.email).catch(err => {
+            console.error('Expiration email error (non-blocking):', err);
+          });
+        } catch (e) {
+          console.error('Could not fetch customer for expiration email:', e);
+        }
 
         // Record event as processed
         await recordStripeEvent(event.id, event.type, userId, {
