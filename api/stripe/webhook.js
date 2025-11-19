@@ -2,6 +2,7 @@ import Stripe from 'stripe';
 import { sql } from '@vercel/postgres';
 import { updateUserSubscription, isStripeEventProcessed, recordStripeEvent, clearSubscriptionCancelAt, setAccountActive, setAccountDormant } from '../../lib/db.js';
 import { updateMailerliteSubscriber } from '../../lib/mailerlite.js';
+import { sendSubscriptionEmail } from '../../lib/mailersend.js';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -86,6 +87,11 @@ export default async function handler(req, res) {
             subscription_date: new Date().toISOString()
           }).catch(err => console.error('Mailerlite update error:', err));
 
+          // Send Subscription Confirmation Email
+          await sendSubscriptionEmail(customer.email, 'paid').catch(err => {
+            console.error('Subscription email error (non-blocking):', err);
+          });
+
           // Record event as processed
           await recordStripeEvent(event.id, event.type, userId, {
             subscription_id: subscription.id,
@@ -133,6 +139,13 @@ export default async function handler(req, res) {
 
         // Clear cancel_at if subscription was renewed (customer re-subscribed)
         await clearSubscriptionCancelAt(userId);
+
+        // Send Subscription Renewal Email (optional, reusing confirmation for now)
+        if (invoice.customer_email) {
+          await sendSubscriptionEmail(invoice.customer_email, 'paid').catch(err => {
+            console.error('Subscription renewal email error (non-blocking):', err);
+          });
+        }
 
         // Record event as processed
         await recordStripeEvent(event.id, event.type, userId, {

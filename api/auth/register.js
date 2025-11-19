@@ -1,6 +1,7 @@
 import { getUserByEmail, createUser, checkIpAbuse } from '../../lib/db.js';
 import { hashPassword, isValidEmail, isValidPassword, getClientIp, createUserSession } from '../../lib/auth.js';
 import { addToMailerlite } from '../../lib/mailerlite.js';
+import { sendWelcomeEmail } from '../../lib/mailersend.js';
 
 export default async function handler(req, res) {
   // Enable CORS
@@ -64,6 +65,11 @@ export default async function handler(req, res) {
     // Add to Mailerlite newsletter
     await addToMailerlite(email.toLowerCase()).catch(err => {
       console.error('Mailerlite error (non-blocking):', err);
+    });
+
+    // Send Welcome Email
+    await sendWelcomeEmail(email.toLowerCase()).catch(err => {
+      console.error('Welcome email error (non-blocking):', err);
     });
 
     // Create session token

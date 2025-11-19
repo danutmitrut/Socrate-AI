@@ -102,7 +102,7 @@ function updateUserInfo(user) {
 }
 
 // Logout function
-window.logout = function() {
+window.logout = function () {
     localStorage.removeItem('auth_token');
     localStorage.removeItem('user');
     localStorage.removeItem('socrate_ai_thread_id');
@@ -110,7 +110,7 @@ window.logout = function() {
 };
 
 // Upgrade subscription
-window.upgradeSubscription = async function() {
+window.upgradeSubscription = async function () {
     try {
         const response = await fetch(`${API_URL}/api/stripe/create-checkout`, {
             method: 'POST',
@@ -133,7 +133,7 @@ window.upgradeSubscription = async function() {
 };
 
 // Cancel subscription
-window.cancelSubscription = async function() {
+window.cancelSubscription = async function () {
     if (!confirm('Ești sigur că vrei să anulezi abonamentul? Vei păstra accesul până la sfârșitul perioadei curente de facturare.')) {
         return;
     }
@@ -163,7 +163,7 @@ window.cancelSubscription = async function() {
 };
 
 // Enhanced chat app function with authentication
-window.chatApp = function() {
+window.chatApp = function () {
     return {
         messages: [],
         currentMessage: '',
@@ -312,6 +312,17 @@ window.chatApp = function() {
             this.isLoading = true;
             this.scrollToBottom();
 
+            // Create placeholder for assistant message
+            const assistantMsgId = Date.now() + '_assistant';
+            this.messages.push({
+                id: assistantMsgId,
+                role: 'assistant',
+                content: '',
+                isStreaming: true
+            });
+
+            let assistantMessageContent = '';
+
             try {
                 const response = await fetch(`${API_URL}/api/chat`, {
                     method: 'POST',
@@ -330,6 +341,9 @@ window.chatApp = function() {
 
                     // Handle specific error codes
                     if (errorData.code === 'ACCOUNT_DORMANT' || errorData.code === 'LIMIT_EXCEEDED') {
+                        // Remove the empty assistant message
+                        this.messages = this.messages.filter(m => m.id !== assistantMsgId);
+
                         this.messages.push({
                             id: Date.now() + '_limit',
                             role: 'assistant',
@@ -352,28 +366,66 @@ window.chatApp = function() {
                     throw new Error(errorData.error || `HTTP ${response.status}`);
                 }
 
-                const data = await response.json();
+                // Handle Streaming Response
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let buffer = '';
 
-                if (data.threadId) {
-                    this.threadId = data.threadId;
-                    this.saveThreadToLocalStorage(this.threadId);
-                }
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
 
-                const assistantResponse = data.assistantMessage.content
-                    .filter(item => item.type === 'text')
-                    .map(item => this.escapeHtml(item.text.value))
-                    .join('<br>');
+                    buffer += decoder.decode(value, { stream: true });
+                    const lines = buffer.split('\n');
 
-                this.messages.push({ id: Date.now() + '_assistant', role: 'assistant', content: assistantResponse });
+                    // Keep the last incomplete line in the buffer
+                    buffer = lines.pop() || '';
 
-                // Update usage info in UI
-                if (data.usage) {
-                    currentUser.messagesUsed = data.usage.messagesUsed;
-                    updateUserInfo(currentUser);
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            const dataStr = line.slice(6);
+                            if (dataStr === '[DONE]') continue;
+
+                            try {
+                                const data = JSON.parse(dataStr);
+
+                                if (data.type === 'init') {
+                                    if (data.threadId) {
+                                        this.threadId = data.threadId;
+                                        this.saveThreadToLocalStorage(this.threadId);
+                                    }
+                                } else if (data.type === 'delta') {
+                                    assistantMessageContent += data.content;
+                                    // Update the message in the array
+                                    const msgIndex = this.messages.findIndex(m => m.id === assistantMsgId);
+                                    if (msgIndex !== -1) {
+                                        // We need to trigger reactivity in Alpine.js, so we might need to replace the object or just property
+                                        // Alpine.js proxies should handle property updates if deep watching, but replacing is safer
+                                        this.messages[msgIndex].content = this.escapeHtml(assistantMessageContent).replace(/\n/g, '<br>');
+                                        this.scrollToBottom();
+                                    }
+                                } else if (data.type === 'usage') {
+                                    if (data.usage) {
+                                        currentUser.messagesUsed = data.usage.messagesUsed;
+                                        updateUserInfo(currentUser);
+                                    }
+                                } else if (data.type === 'error') {
+                                    throw new Error(data.error);
+                                }
+                            } catch (e) {
+                                console.warn('Error parsing stream data:', e);
+                            }
+                        }
+                    }
                 }
 
             } catch (error) {
                 console.error('Error sending message:', error);
+                // Remove the empty/partial assistant message if it failed completely at start
+                if (!assistantMessageContent) {
+                    this.messages = this.messages.filter(m => m.id !== assistantMsgId);
+                }
+
                 this.messages.push({
                     id: Date.now() + '_error',
                     role: 'assistant',
@@ -382,6 +434,10 @@ window.chatApp = function() {
                 });
             } finally {
                 this.isLoading = false;
+                const msgIndex = this.messages.findIndex(m => m.id === assistantMsgId);
+                if (msgIndex !== -1) {
+                    this.messages[msgIndex].isStreaming = false;
+                }
                 this.scrollToBottom();
             }
         },

@@ -101,49 +101,65 @@ export default async function handler(req, res) {
             content: message,
         });
 
-        // Run assistant
-        let run = await openai.beta.threads.runs.create(currentThreadId, {
+        // Set headers for Server-Sent Events
+        res.setHeader('Content-Type', 'text/event-stream');
+        res.setHeader('Cache-Control', 'no-cache');
+        res.setHeader('Connection', 'keep-alive');
+
+        // Send initial data (threadId)
+        res.write(`data: ${JSON.stringify({ type: 'init', threadId: currentThreadId })}\n\n`);
+
+        // Stream the run
+        const stream = openai.beta.threads.runs.stream(currentThreadId, {
             assistant_id: assistantId,
         });
 
-        // Wait for completion
-        while (run.status === 'queued' || run.status === 'in_progress' || run.status === 'cancelling') {
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            run = await openai.beta.threads.runs.retrieve(currentThreadId, run.id);
-        }
+        let fullResponse = "";
 
-        if (run.status === 'completed') {
-            const messages = await openai.beta.threads.messages.list(currentThreadId, { order: 'desc', limit: 1 });
-            const lastAssistantMessage = messages.data.find(msg => msg.role === 'assistant');
-
-            if (lastAssistantMessage) {
+        for await (const event of stream) {
+            if (event.event === 'thread.message.delta') {
+                const chunk = event.data.delta.content?.[0];
+                if (chunk && chunk.type === 'text' && chunk.text.value) {
+                    const text = chunk.text.value;
+                    fullResponse += text;
+                    // Send delta to client
+                    res.write(`data: ${JSON.stringify({ type: 'delta', content: text })}\n\n`);
+                }
+            } else if (event.event === 'thread.run.completed') {
+                // Run completed successfully
                 // Increment usage counter
                 const updatedUser = await incrementMessageUsage(auth.userId);
 
                 // Log usage for analytics
                 await logUsage(auth.userId, currentThreadId);
 
-                return res.status(200).json({
-                    threadId: currentThreadId,
-                    assistantMessage: lastAssistantMessage,
+                // Send usage update to client
+                res.write(`data: ${JSON.stringify({
+                    type: 'usage',
                     usage: {
                         messagesUsed: updatedUser.messages_used,
                         messagesLimit: updatedUser.messages_limit,
                         messagesRemaining: updatedUser.messages_limit - updatedUser.messages_used
                     }
-                });
-            } else {
-                return res.status(500).json({ error: "Asistentul nu a returnat un mesaj." });
+                })}\n\n`);
             }
-        } else {
-            return res.status(500).json({ error: `Rularea a eșuat cu statusul: ${run.status}` });
         }
+
+        res.write('data: [DONE]\n\n');
+        res.end();
 
     } catch (error) {
         console.error('Chat API Error:', error);
-        return res.status(500).json({
-            error: error.message || 'A apărut o eroare neașteptată.',
-            details: process.env.NODE_ENV === 'development' ? error.stack : undefined
-        });
+        // If headers haven't been sent yet, send JSON error
+        if (!res.headersSent) {
+            return res.status(500).json({
+                error: error.message || 'A apărut o eroare neașteptată.',
+                details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+            });
+        } else {
+            // If streaming started, send error event
+            res.write(`data: ${JSON.stringify({ type: 'error', error: error.message })}\n\n`);
+            res.end();
+        }
     }
 }
