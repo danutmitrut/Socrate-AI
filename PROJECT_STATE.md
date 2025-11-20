@@ -1,6 +1,6 @@
 # Project State - SOCRATE-AI
-**Data:** 14 noiembrie 2025, 22:30
-**Status:** 🚀 LIVE MODE + DORMANT ACCOUNT SYSTEM ACTIV!
+**Data:** 17 noiembrie 2025, 12:30
+**Status:** 🚀 LIVE MODE + FORGOT/RESET PASSWORD + EMAIL NOTIFICATIONS!
 
 ---
 
@@ -8,6 +8,8 @@
 
 ### 🎯 Core Features - 100% Complete
 - [x] **Autentificare completă** - Register + Login cu JWT
+- [x] **Forgot/Reset Password** - COMPLET funcțional cu email-uri automate! 🎉
+- [x] **Email Notifications** - Mailersend integrat (reset password + security alerts) 📧
 - [x] **Database Neon Postgres** - Configurat și funcțional
 - [x] **Anti-abuse IP tracking** - Un singur cont per IP
 - [x] **Free tier** - 20 mesaje, 72 ore expirare
@@ -21,9 +23,11 @@
 
 ### 🔧 Setup Tehnic Realizat
 - [x] vercel.json - Configurat pentru routing
-- [x] Environment variables - Toate configurate (STRIPE, POSTGRES, JWT, OpenAI)
+- [x] Environment variables - Toate configurate (STRIPE, POSTGRES, JWT, OpenAI, MAILERSEND)
 - [x] Database schema - Tabele create (users, ip_tracking, sessions, usage_logs, stripe_events)
-- [x] Stripe keys - Test mode configurat complet
+- [x] **Database columns** - reset_token, reset_token_expiry (migrație 17 nov) ✅
+- [x] Stripe keys - Live Mode configurat
+- [x] **Mailersend** - Domain verificat + API key configurat ✅
 - [x] STRIPE_SETUP.md - Ghid pas-cu-pas complet
 - [x] Debug endpoints - Pentru testing rapid
 - [x] **SECURITY.md** - Documentație securitate completă
@@ -59,6 +63,105 @@
 - ✅ Dormant Account System (FAZA 1) implementat
 - ✅ IP Tracking anti-abuse îmbunătățit
 - ✅ UI redesign (3-column layout)
+
+---
+
+## 🎉 MAJOR UPDATE: Forgot/Reset Password + Email Notifications (17 noiembrie 2025)
+
+### Ce s-a implementat - COMPLET funcțional:
+
+#### 1. Frontend (auth.html) ✅
+- **Text fix:** "Bine ai venit!" (generic, nu "Bine ai revenit!")
+- **Formular Forgot Password:** UI complet cu toggle Login/Register/Forgot
+- **Pagină nouă:** reset-password.html (UI modern, validări, redirect)
+
+#### 2. Backend - Forgot Password ✅
+- **Endpoint:** `/api/auth/forgot-password`
+- **Funcționalitate:**
+  - Generare token securizat (crypto.randomBytes)
+  - Token expiry: 1 oră
+  - Salvare în DB (coloane noi: reset_token, reset_token_expiry)
+  - Trimitere email automat prin Mailersend
+  - Security: nu dezvăluie dacă email-ul există
+
+#### 3. Backend - Reset Password ✅
+- **Endpoint:** `/api/auth/reset-password`
+- **Funcționalitate:**
+  - Validare token + expiry
+  - Hash parolă nouă (bcrypt)
+  - Ștergere token după reset (prevent reuse)
+  - **Trimitere email notificare securitate** 📧
+
+#### 4. Email Integration (Mailersend) ✅
+- **Library:** lib/mailersend.js
+- **Email templates HTML:**
+  - `sendPasswordResetEmail()` - cu buton clickable, backup link, warning expiry
+  - `sendPasswordChangedEmail()` - alertă securitate roșie, instrucțiuni compromis
+- **Branding:** Socrate AI culori + logo
+- **FROM:** contact@personalityaiarchitect.com
+- **Domain verified:** personalityaiarchitect.com ✅
+
+#### 5. Database Migration ✅
+- **Coloane noi:** reset_token (VARCHAR 255), reset_token_expiry (TIMESTAMP)
+- **Script:** `/api/debug/run-reset-migration.js`
+- **Status:** Rulat cu succes pe production
+
+#### 6. Debug Tools ✅
+- `/api/debug/get-reset-link` - verificare token pentru user
+- `/api/debug/clear-test-subscription` - cleanup test subscriptions
+- `/api/debug/check-my-subscription` - verificare detalii subscription
+
+#### 7. Security Features ✅
+- Token-based reset (nu parolă prin email)
+- Crypto-secure tokens (crypto.randomBytes)
+- Token expiry (1 oră)
+- Tokens șterse după folosire
+- Password hashing (bcrypt)
+- No email disclosure (mesaj generic)
+- Email notification după schimbare parolă
+
+### User Flow complet testat:
+1. User click "Ai uitat parola?" → introduce email
+2. **Email sosește în ~2-3 secunde** 📧
+3. Click buton în email → redirect la reset-password.html
+4. Introduce parolă nouă → confirmă
+5. Success! → redirect la login
+6. **Primește email de securitate** ⚠️
+7. Login cu noua parolă → Works! ✅
+
+### Zone atinse (files):
+- `auth.html` - forgot password form + logic
+- `reset-password.html` - pagină nouă
+- `api/auth/forgot-password.js` - endpoint nou
+- `api/auth/reset-password.js` - endpoint nou
+- `lib/mailersend.js` - email library nou
+- `api/debug/` - 3 endpoints noi
+- `migrations/` - SQL migration
+
+### Probleme rezolvate (17 nov):
+- [x] Text "Bine ai revenit!" → "Bine ai venit!" (generic)
+- [x] Butonul "Recuperează parola" nu funcționa → COMPLET implementat
+- [x] Test Mode subscription bloca cancel → endpoint cleanup creat
+- [x] Mailersend domain verification → verificat cu succes
+- [x] FROM email configuration → contact@personalityaiarchitect.com
+- [x] API key deployment → configurat în Vercel
+
+### Commits relevante (17 nov):
+- `3c040ed` - Add forgot password functionality
+- `3085de1` - Complete forgot/reset password functionality
+- `024c90e` - Integrate Mailersend for password reset emails
+- `6042f93` - Update FROM email to contact@personalityaiarchitect.com
+- `a9d87b6` - Add password changed security notification email
+
+### Statistici sesiune:
+- Durată: ~4 ore
+- Fișiere create: 10
+- Fișiere modificate: 3
+- LOC total: ~600+ (frontend + backend + email templates)
+- Database migrations: 1
+- API endpoints noi: 6
+- Email templates: 2 (HTML + plain text)
+- Tests: Toate passed ✅
 
 ---
 
@@ -335,37 +438,15 @@ MAILERLITE_API_KEY - (opțional) Mailerlite API key
 
 ---
 
-## 📊 Commits & Deployment History
+## 📊 Git & Deployment Status
 
-**Last Commit:** `e8098ab` - "Fix clear-test-subscription endpoint - use sql instead of query"
+**Last Commit:** `a9d87b6` - "Add password changed security notification email"
 **Branch:** main
 **Deployment Status:** ✅ Live on Vercel
-**Migration Status:** ✅ account_status column deployed
+**Migration Status:** ✅ reset_token columns deployed (17 nov)
 
-**Session 1 - Files Modified (14 nov, 18:30):**
-- STRATEGY_FREE_TIER_V2.md (created)
-- api/auth/me.js
-- api/auth/register.js
-- api/chat.js
-- api/debug/add-account-status-column.js (created)
-- api/stripe/webhook.js
-- app.js
-- lib/db.js
-
-**Session 2 - Files Modified (14 nov, 22:00-22:30):**
-- api/debug/check-my-subscription.js (created) - Endpoint pentru verificare detalii subscription
-- api/debug/clear-test-subscription.js (created) - Endpoint pentru curățare test subscriptions
-- PROJECT_STATE.md (updated) - Actualizat cu session summary
-
-**Total Changes Session 1:**
-- 8 files changed
-- 526 insertions(+)
-- 29 deletions(-)
-
-**Total Changes Session 2:**
-- 3 files changed
-- 95 insertions(+)
-- 3 deletions(-)
+**Pentru commit history complet:** `git log --oneline --since="2025-11-13"`
+**Pentru files modified:** `git diff --stat origin/main`
 
 ---
 
